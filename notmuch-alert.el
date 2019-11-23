@@ -184,15 +184,17 @@ Returns the installed alert or nil if someting went wrong."
    (when filter
      (concat " AND " filter))))
 
-(defun notmuch-alert-do-count (bookmark &optional filter)
+(defun notmuch-alert-do-count (bookmark &optional filter no-correction)
   "Count the mails matched by BOOKMARK and an additional extra FILTER.
 Correct the count according to the tara value of bookmark, if
-defined."
+defined. This correction can be turned of by setting NO-CORRECTION."
   (let* ((last-count (bookmark-prop-get bookmark 'tara))
 	 (query      (notmuch-alert-full-query bookmark filter))
 	 (count (string-to-number
 		 (notmuch-command-to-string "count" query))))
-    (max (- count (or last-count 0)) 0)))
+    (if no-correction
+	count
+    (max (- count (or last-count 0)) 0))))
 
 (defun notmuch-alert-update (bookmark)
   "Update the alert of BOOKMARK and return its status."
@@ -223,14 +225,40 @@ If alert is not active, return INACTIVE-STRING."
 
 (defun notmuch-alert-pretty-bm-status-string (bookmark)
   "Return a pretty status information on BOOKMARK's alert."
-  (let* ((alert  (notmuch-alert-get bookmark))
-	 (status (notmuch-alert-status alert)))
-    (concat (if status
-		(propertize "  ACTIVE" 'face '(:foreground "green"))
-	      (propertize "INACTIVE" 'face '(:foreground "dimgrey")))
-	    " "
-	    (bookmark-name-from-full-record bookmark)
-	    (notmuch-alert-status-string alert nil " -- "))))
+  (let* ((alert       (notmuch-alert-get bookmark))
+	 (status      (when alert (notmuch-alert-status alert))))
+    ;;
+    (concat
+     ;; Status string
+     (let* ((status-string (cond
+			    ((not alert)    "BOOKMARK")
+			    ((null status)  "INACTIVE")
+			    (t              "  ACTIVE"))))
+       (propertize status-string 'face `(:foreground
+					 ,(cond
+					   ((not alert)   font-lock-builtin-face)
+					   ((null status) "dimgrey")
+					   (t             "green")))))
+     ;; spacer
+     " "
+     ;; total count
+     (let* ((total-count  (notmuch-alert-do-count bookmark nil t))
+	    (total-string (concat "(" (notmuch-hello-nice-number (or total-count 0)) ")"))
+	    (pad          (- 8 (string-width total-string)))) ;; 8 = 6 for the number + 2 for the parentheses
+       (concat
+	total-string
+	(when (> pad 0)
+	  (make-string pad 32)))) ;; good ole' ascii... should be (string-to-char " ")
+     ;; bookmark name
+     " "
+     (bookmark-name-from-full-record bookmark)
+     ;; optionally alert status
+     (when alert (notmuch-alert-status-string alert
+					      (concat " -- " (notmuch-alert-description alert)
+						      (let* ((tare (notmuch-alert-get-tare bookmark)))
+							(when tare
+							  (format ", tare set to %d." tare))))
+					      " -- ")))))
 
 (defun notmuch-alert-display-info (alert)
   "Display information about ALERT in the echo area."
@@ -277,17 +305,13 @@ If alert is not active, return INACTIVE-STRING."
 				  (seq-filter #'notmuch-alert-bm-has-alert-p bookmark-alist))))
     (unless collection
       (user-error (if include-inactive-alerts "No alerts defined" "All alerts are inactive")))
-    (bookmark-jump (acomplete "Select bookmark: " collection
+    (bookmark-jump (acomplete "Select bookmark: "
+			      (append collection
+				      (seq-filter (lambda (bm)
+						    (and (notmuch-bookmarks-record-p bm)
+							 (not (notmuch-alert-bm-has-alert-p bm))))
+						  bookmark-alist))
 			      :string-fn #'notmuch-alert-pretty-bm-status-string))))
-
-;;;###autoload
-(defun notmuch-alert-of-interest ()
-  (interactive)
-  (notmuch-alert-update-all)
-  (let* ((alerts 
-  (seq-sort))
-
-
 
 ;; Useful macro for dealing with indirect access to alerts via the current buffer:
 (defmacro notmuch-alert-with-current-buffer (bookmark-symbol alert-symbol &rest body)
