@@ -158,12 +158,12 @@ Returns the installed alert or nil if someting went wrong."
 
 (defun notmuch-alert-bm-query (bookmark)
   "Return the query associated with BOOKMARK."
-  (cl-assert (notmuch-alert-bm-has-alert-p bookmark))
   (bookmark-prop-get bookmark 'filename))
 
 (defun notmuch-alert-set-tare (bookmark tare)
   "Set the tare for BOOKMARK."
-  (bookmark-prop-set bookmark 'tara tare))
+  (bookmark-prop-set bookmark 'tara tare)
+  (notmuch-alert-maybe-save-bookmark-alist))
 
 (defun notmuch-alert-get-tare (bookmark)
   "Get the tare for BOOKMARK."
