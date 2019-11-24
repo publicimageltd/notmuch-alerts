@@ -195,10 +195,6 @@ Returns the installed alert or nil if someting went wrong."
   (when-let* ((bm (notmuch-bookmarks-get-buffer-bookmark buffer)))
     (notmuch-alert-remove-alert bm)))
 
-(defun notmuch-alert-bm-query (bookmark)
-  "Return the query associated with BOOKMARK."
-  (bookmark-prop-get bookmark 'filename))
-
 (defun notmuch-alert-set-tare (bookmark tare)
   "Set the tare for BOOKMARK."
   (bookmark-prop-set bookmark 'tara tare)
@@ -218,7 +214,7 @@ Returns the installed alert or nil if someting went wrong."
   "Build a query joining BOOKMARK's query and the FILTER query."
   (concat
    (when filter "(")
-   (notmuch-alert-bm-query bookmark)
+   (notmuch-bookmarks-query bookmark)
    (when filter ")")
    (when filter
      (concat " AND " filter))))
@@ -286,7 +282,7 @@ If an alert exists, just display its current count, else query
 the notmuch database directly."
   (let* ((count (if alert
 		    (notmuch-alert-count alert)
-		  (notmuch-alert-notmuch-count (notmuch-alert-bm-query bookmark)))))
+		  (notmuch-alert-notmuch-count (notmuch-bookmarks-query bookmark)))))
     (concat "(" (notmuch-hello-nice-number count) ")")))
 
 (defun notmuch-alert-pprinter:alert-info (bookmark alert)
