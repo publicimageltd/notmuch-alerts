@@ -397,5 +397,10 @@ With double prefix, remove the tare."
   (setq bookmark-alist
 	(seq-map #'notmuch-alert-copy-iff-bookmark bookmark-alist)))
 
+;; Hook into notmuch ecosystem
+
+(add-hook 'notmuch-show-hook #'notmuch-alert-set-sensible-buffer-name)
+(add-to-list 'ivy-sort-functions-alist '(notmuch-alert-visit-alert-bookmark))
+
 (provide 'notmuch-alert)
 ;;; notmuch-alert.el ends here
