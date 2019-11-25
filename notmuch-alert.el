@@ -503,7 +503,7 @@ With double prefix, remove the tare."
 			 "No tare set")))
 	(t (progn
 	     (notmuch-alert-set-tare bm (notmuch-alert-notmuch-count (notmuch-bookmarks-query bm)))
-	     (message "Tare set to %d" count)))))))
+	     (message "Tare set to %d" (notmuch-alert-get-tare bm))))))))
 
 ;;; Convenience functions
 
