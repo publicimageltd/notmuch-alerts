@@ -288,6 +288,8 @@ the notmuch database directly."
 (defun notmuch-alert-pprinter:alert-info (bookmark alert)
   "Return information on ALERT."
   (when alert
+    ;; TODO Durch eigene Berechnung der Anzeige ersetzen,
+    ;; dann auch mit propertized string (...-active-state)
     (notmuch-alert-status-string alert
 				 (notmuch-alert-description alert))))
 
@@ -494,13 +496,13 @@ With double prefix, remove the tare."
 	   (tara       (notmuch-alert-get-tare bm)))
       (cl-case (car just-display)
 	(16   (progn
-		(notmuch-aler-set-tare bm 0)
+		(notmuch-alert-set-tare bm 0)
 		(message "Tare reset to 0.")))
 	(4    (message (if tara
 			   (format "Current tare is %d" tara)
 			 "No tare set")))
 	(t (progn
-	     (notmuch-alert-set-tare bm count)
+	     (notmuch-alert-set-tare bm (notmuch-alert-notmuch-count (notmuch-bookmarks-query bm)))
 	     (message "Tare set to %d" count)))))))
 
 ;;; Convenience functions
