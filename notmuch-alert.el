@@ -420,19 +420,44 @@ If alert is not active, return INACTIVE-STRING."
   (acomplete prompt alerts
 	     :string-fn #'notmuch-alert-description))
 
+(defvar notmuch-alert-visit-quit-when-pressed-twice t
+  "Quit `notmuch-alert-visit' when the key it is bound to is pressed again.")
+
+(defun notmuch-alert-get-minibuffer-map ()
+  "Get the minibuffer map which will be used by `completing-read'.
+Change this function to add completion backends."
+  (if ivy-mode ivy-minibuffer-map minibuffer-local-map))
+
 ;;;###autoload
-(defun notmuch-alert-visit-alert-bookmark ()
+(defun notmuch-alert-visit ()
   "Jump to one of the bookmarks with an alert."
   (interactive)
-  (notmuch-alert-update-all)
-  (let* ((collection (append
-		      (seq-filter #'notmuch-alert-bm-has-active-alert-p bookmark-alist)
-		      (seq-filter #'notmuch-alert-bm-has-inactive-alert-p bookmark-alist)
-		      (seq-filter (lambda (bm) (and (notmuch-bookmarks-record-p bm)
-						    (not (notmuch-alert-bm-has-alert-p bm))))
-				  bookmark-alist))))
-    (bookmark-jump (acomplete "Select bookmark: " collection
-			      :string-fn (apply-partially #'notmuch-alert-pp-line notmuch-alert-bm-prettyprint-scheme)))))
+  (let* (result
+	 (keys   (this-command-keys)))
+    ;; 
+    (when notmuch-alert-visit-quit-when-pressed-twice
+      ;;  modify map so that a repetition of the calling key sequence cancels the selection
+      (setq backup (lookup-key (notmuch-alert-get-minibuffer-map) keys))
+      (define-key (notmuch-alert-get-minibuffer-map) keys 'minibuffer-keyboard-quit))
+    ;;
+    (notmuch-alert-update-all)
+    (unwind-protect 
+	(let* ((collection (append
+			    (seq-filter #'notmuch-alert-bm-has-active-alert-p bookmark-alist)
+			    (seq-filter #'notmuch-alert-bm-has-inactive-alert-p bookmark-alist)
+			    (seq-filter (lambda (bm) (and (notmuch-bookmarks-record-p bm)
+							  (not (notmuch-alert-bm-has-alert-p bm))))
+					bookmark-alist))))
+	       ;;
+	  (setq result    (acomplete "Select bookmark: " collection
+				     :string-fn (apply-partially #'notmuch-alert-pp-line notmuch-alert-bm-prettyprint-scheme))))
+      ;; cleanup form:
+      (when notmuch-alert-visit-quit-when-pressed-twice
+	(define-key (notmuch-alert-get-minibuffer-map) keys backup))
+      ;; respond to selection in a cleaned up environment:
+      (when result
+	(push-mark)
+	(bookmark-jump result)))))
 
 ;; Useful macro for dealing with indirect access to alerts via the current buffer:
 (defmacro notmuch-alert-with-current-buffer (bookmark-symbol alert-symbol &rest body)
@@ -521,7 +546,7 @@ With double prefix, remove the tare."
 ;; Hook into notmuch ecosystem
 
 (add-hook 'notmuch-show-hook #'notmuch-alert-set-sensible-buffer-name)
-(add-to-list 'ivy-sort-functions-alist '(notmuch-alert-visit-alert-bookmark))
+(add-to-list 'ivy-sort-functions-alist '(notmuch-alert-visit))
 
 (provide 'notmuch-alert)
 ;;; notmuch-alert.el ends here
