@@ -390,15 +390,23 @@ If alert is not active, return INACTIVE-STRING."
 	     "."
 	     ))))
 
+(defun notmuch-alert-set-buffer-name-if-unique (buffer name)
+  "Set BUFFER's name to NAME if it is not already used by some other buffer."
+  (unless (seq-contains (seq-map #'buffer-name (buffer-list)) name #'string-equal)
+    (with-current-buffer buffer
+      (rename-buffer name))))
+
 (defun notmuch-alert-set-sensible-buffer-name ()
   "Set a better buffer name for the currently visited notmuch show buffer."
-  (when (eq major-mode 'notmuch-show-mode)
-    (let* ((from (notmuch-show-get-from))
-	   (subject (notmuch-show-get-subject))
-	   (new-name (format "%s: %s" from subject))
-	   (unique-p (null (get-buffer new-name))))
-      (when unique-p
-	(setf (buffer-name) new-name)))))
+  (if-let* ((is-notmuch (memq major-mode '(notmuch-search-mode notmuch-show-mode notmuch-tree-mode notmuch-message-mode)))
+	    (bm (notmuch-bookmarks-get-buffer-bookmark))
+	    (bm-name (bookmark-name-from-full-record bm)))
+      (notmuch-alert-set-buffer-name-if-unique (current-buffer) bm-name)
+    (when (eq major-mode 'notmuch-show-mode)
+      (let* ((from (notmuch-show-get-from))
+	     (subject (notmuch-show-get-subject))
+	     (new-name (format "%s: %s" from subject)))
+	(notmuch-alert-set-buffer-name-if-unique (current-buffer) new-name)))))
 
 ;;; * Interactive Functions
 
@@ -546,6 +554,9 @@ With double prefix, remove the tare."
 ;; Hook into notmuch ecosystem
 
 (add-hook 'notmuch-show-hook #'notmuch-alert-set-sensible-buffer-name)
+(add-hook 'notmuch-tree-mode-hook #'notmuch-alert-set-sensible-buffer-name)
+(add-hook 'notmuch-search-mode-hook #'notmuch-alert-set-sensible-buffer-name)
+
 (add-to-list 'ivy-sort-functions-alist '(notmuch-alert-visit))
 
 (provide 'notmuch-alert)
