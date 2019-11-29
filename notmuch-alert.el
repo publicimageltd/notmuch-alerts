@@ -394,8 +394,7 @@ If alert is not active, return INACTIVE-STRING."
   "Set BUFFER's name to NAME if it is not already used by some other buffer."
   (unless (seq-contains (seq-map #'buffer-name (buffer-list)) name #'string-equal)
     (with-current-buffer buffer
-      (rename-buffer name)
-      (notmuch-search-buffer-title ))))
+      (rename-buffer name))))
 
 (defun notmuch-alert-set-sensible-buffer-name ()
   "Set a better buffer name for the currently visited notmuch show buffer."
