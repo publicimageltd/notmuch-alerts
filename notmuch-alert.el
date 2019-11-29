@@ -394,19 +394,28 @@ If alert is not active, return INACTIVE-STRING."
   "Set BUFFER's name to NAME if it is not already used by some other buffer."
   (unless (seq-contains (seq-map #'buffer-name (buffer-list)) name #'string-equal)
     (with-current-buffer buffer
-      (rename-buffer name))))
+      (rename-buffer name)
+      (notmuch-search-buffer-title ))))
 
 (defun notmuch-alert-set-sensible-buffer-name ()
   "Set a better buffer name for the currently visited notmuch show buffer."
-  (if-let* ((is-notmuch (memq major-mode '(notmuch-search-mode notmuch-show-mode notmuch-tree-mode notmuch-message-mode)))
-	    (bm (notmuch-bookmarks-get-buffer-bookmark))
-	    (bm-name (bookmark-name-from-full-record bm)))
-      (notmuch-alert-set-buffer-name-if-unique (current-buffer) bm-name)
-    (when (eq major-mode 'notmuch-show-mode)
-      (let* ((from (notmuch-show-get-from))
-	     (subject (notmuch-show-get-subject))
-	     (new-name (format "%s: %s" from subject)))
-	(notmuch-alert-set-buffer-name-if-unique (current-buffer) new-name)))))
+  ;; FIXME does not work because of notmuch's strange buffer handling.
+  ;; See `notmuch-search' as an example. Basically, it is assumed that every search buffer can be identified
+  ;; via its name, and refreshing the buffer finds the buffer (!) via that function.
+  ;;
+  ;; (if-let* ((is-notmuch (memq
+  ;; major-mode '(notmuch-search-mode notmuch-show-mode
+  ;; notmuch-tree-mode notmuch-message-mode))) (bm
+  ;; (notmuch-bookmarks-get-buffer-bookmark)) (bm-name
+  ;; (bookmark-name-from-full-record bm)))
+  ;; (notmuch-alert-set-buffer-name-if-unique (current-buffer)
+  ;; bm-name)
+  ;;
+  (when (eq major-mode 'notmuch-show-mode)
+    (let* ((from (notmuch-show-get-from))
+	   (subject (notmuch-show-get-subject))
+	   (new-name (format "%s: %s" from subject)))
+      (notmuch-alert-set-buffer-name-if-unique (current-buffer) new-name))))
 
 ;;; * Interactive Functions
 
@@ -554,8 +563,8 @@ With double prefix, remove the tare."
 ;; Hook into notmuch ecosystem
 
 (add-hook 'notmuch-show-hook #'notmuch-alert-set-sensible-buffer-name)
-(add-hook 'notmuch-tree-mode-hook #'notmuch-alert-set-sensible-buffer-name)
-(add-hook 'notmuch-search-mode-hook #'notmuch-alert-set-sensible-buffer-name)
+;; (add-hook 'notmuch-tree-mode-hook #'notmuch-alert-set-sensible-buffer-name)
+;; (add-hook 'notmuch-search-mode-hook #'notmuch-alert-set-sensible-buffer-name)
 
 (add-to-list 'ivy-sort-functions-alist '(notmuch-alert-visit))
 
