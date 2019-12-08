@@ -92,6 +92,12 @@ Present the user a selection consisting of, in this order:
  
 ![Screenshot](screenshot.png)
 
+As a special bonus, calling `notmuch-alert-visit` modifies the keymap
+so that pressing the calling key twice will cancel the action. This is
+meant for offering a quick way to 'check mails'. If you do not like
+that behaviour, set `notmuch-alert-visit-quit-when-pressed-twice` to
+`nil`.
+
 ## notmuch-alert-tare
 
 Set the tare for the current buffer. With prefix, just display the
