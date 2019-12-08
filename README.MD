@@ -90,7 +90,7 @@ Present the user a selection consisting of, in this order:
  - all inactive alerts
  - all further notmuch bookmarks
  
-!()[screenshot.png]
+![Screenshot](screenshot.png)
 
 ## notmuch-alert-tare
 
