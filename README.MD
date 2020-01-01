@@ -1,22 +1,35 @@
 # notmuch alerts
 Add and manage alerts 'on top' of notmuch bookmarks.
 
-This package allows check bookmarked notmuch queries for either 'new'
-or 'unread' mails. It further provides an API to visit, create, check
-and remove alerts. Alerts are always created 'on top' of existing
-notmuch bookmarks, that is, they extend a bookmared query by adding an
-additional filter query.
+This package allows to check bookmarked notmuch queries for the
+existence of 'new' or 'unread' mails. In the jargon of this package,
+such a check is called an *alert*. The package provides an API to
+visit, create, check and remove alerts. 
+
+Alerts are always created 'on top' of existing notmuch bookmarks,
+meaning that they extend a bookmarked query by adding an additional
+filter query. Thus, if you have a query listing all mails from today,
+an *unread alert* checks whether there are any mails which have
+today's date *and* are marked as unread.
 
 This file is NOT part of notmuch or the notmuch emacs suite.
 
 # What is an alert?
 
-An alert is a function receiving one argument, a bookmark. It is up to
-this function to build and run the query which checks for matching
-mails. The package provides some helpful functions for that. The
-return value of the alert function must be either `nil`, indicating
-that nothing happened ("inactive alert"), or the number of relevant
-mails matched ("active alert"), as an integer.
+From the point of view of the user, an alert defines a query which is
+added to an existing query with a boolean AND, effectively further
+filtering the number of matches. Think of it as an in-query query,
+checking for a subset of mails within the set of mails already defined
+by the bookmark itself. An alert has two states: The alert is *active*
+if the filter matches any number of mails; else it remains *inactive*.
+
+From the point of view of elisp, an alert is a function receiving one
+argument, a bookmark. It is up to this function to build and run the
+query which checks for matching mails. The package provides some
+helpful functions for these routine operations. The return value of
+the alert function must be either `nil`, indicating that nothing
+happened ("inactive alert"), or the number of relevant mails matched
+("active alert"), as an integer.
 
 # Features
 
@@ -41,12 +54,15 @@ This package depends on the following packages:
 I have the following snippet in my `init.el`:
 
 ```
+;; First, install notmuch-bookmarks:
 (use-package notmuch-bookmarks
   :after notmuch
   :config
   (notmuch-bookmarks-mode))
 
+;; Second, install the alert package:
 (use-package notmuch-alert
+  :after notmuch-alert
   :config
   (notmuch-alert-mode)
   :bind*
