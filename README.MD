@@ -35,7 +35,6 @@ This package depends on the following packages:
  - Emacs > 26.1
  - notmuch
  - notmuch-bookmarks
-
  
 # Installation
 
@@ -164,8 +163,20 @@ If you do not like this behaviour, set
 Set the tare for the current buffer. With prefix, just display the
 current value. With double prefix, remove the tare.
 
- Setting a tare of 0 effectively means to remove the tare.
- 
+A *tare* is a bookmark local value which wil be automatically
+substracted before checking whether an alert should be raised. For
+example, if you have 3 unread mails and 'tare' the alert, the alert
+will remain inactive from now on unless new mails arrive. 
+
+Do not forget that changing the mails effectively invalidates the
+tare. If you mark the unread mails as read, and then 3 new mails
+arrive, you won't be notified. From the standpoint of numbers, the
+effective mail count is 0, whether you count 3 old unread mails or 3
+newly arrived unread mails. Thus, do not forget to remove a tare in
+time.
+
+Setting a tare of 0 effectively means to remove the tare.
+
  
 
 
