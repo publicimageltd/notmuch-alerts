@@ -4,17 +4,31 @@ Add and manage alerts 'on top' of notmuch bookmarks.
 This package allows to check bookmarked notmuch queries for the
 existence of 'new' or 'unread' mails. In the jargon of this package,
 such a check is called an *alert*. The package provides an API to
-visit, create, check and remove alerts. 
+visit, create, check and remove alerts.
 
 Alerts are always created 'on top' of existing notmuch bookmarks,
 meaning that they extend a bookmarked query by adding an additional
 filter query. Thus, if you have a query listing all mails from today,
 an *unread alert* checks whether there are any mails which have
-today's date *and* are marked as unread.
+today's date *and* are also marked as unread.
 
 This file is NOT part of notmuch or the notmuch emacs suite.
 
+# Features
+
+ - Interactively add or remove alert in a bookmarked notmuch buffer.
+ - Set a "tare" value for counting mails which is automatically
+   subtracted before deciding whether there are any new or unread
+   mails. Thus, you can 'silence' an alert without changing the status
+   of the existing mails -- they are just not counted in.
+ - Provide an interactive selection of all alerts and bookmarks,
+   sorted by relevancy. You can see at one glance which new mails have
+   arrived.
+
 # What is an alert?
+
+An alert tells you whether a bookmark has 'new' mails (if this is the
+case, the alert is *active*).
 
 From the point of view of the user, an alert defines a query which is
 added to an existing query with a boolean AND, effectively further
@@ -30,16 +44,6 @@ helpful functions for these routine operations. The return value of
 the alert function must be either `nil`, indicating that nothing
 happened ("inactive alert"), or the number of relevant mails matched
 ("active alert"), as an integer.
-
-# Features
-
- - Interactively add or remove alert in a bookmarked notmuch buffer.
- - Set a "tare" value for counting mails which is automatically
-   subtracted before deciding whether there are any new or unread
-   mails. Thus, you can 'silence' an alert without changing the status
-   of the existing mails -- they are just not counted in.
- - Provide an interactive selection of all alerts and bookmarks,
-   sorted by relevancy.
 
 # Dependencies
 
@@ -62,7 +66,7 @@ I have the following snippet in my `init.el`:
 
 ;; Second, install the alert package:
 (use-package notmuch-alert
-  :after notmuch-alert
+  :after notmuch-bookmarks
   :config
   (notmuch-alert-mode)
   :bind*
@@ -92,7 +96,7 @@ into the bookmark. If `bookmark-save-flag`is `t`, automatically save
 the changed bookmark.
 
 The available alerts are predefined in the global variable
-`notmuch-alerts`. See below for adding new alerts.
+`notmuch-alerts`. See below for how to add new alerts.
 
 ## Predefined alerts
 
@@ -105,7 +109,7 @@ The available alerts are predefined in the global variable
  <dt> notmuch-alert-any</dt>
  <dd>Check for any mails matching the original bookmark query; no further filtering.<dd>
 
-<dt>notmuch-alert-today:</dt>
+<dt>notmuch-alert-today</dt>
 <dd>Check for any mails from today.</dd>
 
  </dl>
@@ -134,7 +138,7 @@ is:attachment`. Thus, you create the following function:
 
 ```
 
-The keywords are rather self-explaning. `:description` is the
+The keywords are rather self-explaining. `:description` is the
 description of the alert as it will be presented to the user, i.e.
 when selecting one of the available alerts for installation.
 `:format-string` will be used to present the number of active mails
@@ -184,14 +188,16 @@ substracted before checking whether an alert should be raised. For
 example, if you have 3 unread mails and 'tare' the alert, the alert
 will remain inactive from now on unless new mails arrive. 
 
-Do not forget that changing the mails effectively invalidates the
-tare. If you mark the unread mails as read, and then 3 new mails
-arrive, you won't be notified. From the standpoint of numbers, the
-effective mail count is 0, whether you count 3 old unread mails or 3
-newly arrived unread mails. Thus, do not forget to remove a tare in
-time.
+Setting a tare of 0 (or calling `notmuch-alert-tare`with double
+prefix) removes the tare.
 
-Setting a tare of 0 effectively means to remove the tare.
+This is an important operation. Do not forget that changing the mails
+effectively invalidates the tare. If you mark the 3 unread mails as
+read, and then 3 new mails arrive, the alert will remain inactive.
+From the standpoint of numbers, the effective mail count is 0, whether
+you count 3 old unread mails or 3 newly arrived unread mails. Thus, do
+not forget to remove the tare.
+
 
  
 
