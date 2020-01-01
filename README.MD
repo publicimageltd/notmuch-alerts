@@ -35,7 +35,7 @@ This package depends on the following packages:
  - Emacs > 26.1
  - notmuch
  - notmuch-bookmarks
- - acomplete (a package of my own, also available in this repository)
+
  
 # Installation
 

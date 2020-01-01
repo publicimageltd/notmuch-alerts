@@ -47,7 +47,6 @@
 
 (require 'notmuch)
 (require 'notmuch-bookmarks)
-(require 'acomplete)
 (require 'cl-lib)
 (require 'subr-x)
 
@@ -84,6 +83,59 @@ Schematic example:
 
 See also `notmuch-alert-pp-column' for a list of the allowed
 properties.")
+
+;;; * Easier API for completion
+
+;; This is basically a copy of acomplete.el. It is included as to
+;; reduce dependencies for this package.
+
+(defun notmuch-alert--propertize (s data)
+  "Add DATA as a text property to S."
+  (propertize s 'data data))
+
+(defun notmuch-alert--format (string-fn s &rest args)
+  "Format S using STRING-FN.
+
+If STRING-FN is a format string, pass it to `format' with
+arguments S and further ARGS."
+  (let* ((fn (cond
+	      ((functionp string-fn) string-fn)
+	      ((stringp   string-fn) (apply-partially #'format string-fn))
+	      (t                     #'identity))))
+    (apply fn s args)))
+
+(cl-defun notmuch-alert--complete (prompt collection
+					  &key (string-fn "%s")
+					  (data-fn #'identity)
+					  (require-match t))
+       "Offer completion on COLLECTION.
+
+COLLECTION is a data list. It is mapped to STRING-FN to create
+choices for the user. 
+
+ If STRING-FN is a string, it is used as a format string with the
+item as its single argument.
+
+DATA-FN maps a data item to each item of the collection.
+
+Return the selected data item (not its string representation)."
+       (declare (indent 1))
+       (let* (;; create a-collection:
+	      (string-list (mapcar (apply-partially #'notmuch-alert--format string-fn) collection))
+	      (data-list   (mapcar data-fn collection))
+	      (a-collection (seq-mapn #'notmuch-alert--propertize
+				      string-list
+				      data-list))
+	      ;; let the user select:
+	      (result   (completing-read prompt
+					 a-collection
+					 nil
+					 require-match))
+	      ;; extract the data from the text property:
+	      (result-data (get-text-property 0 'data result)))
+	 (if (or require-match result-data)
+	     result-data
+	   result)))
 
 ;;; * Alert Object
 
@@ -408,8 +460,8 @@ Prepend the string PREFIX if it is not nil."
   "Set a better buffer name for the currently visited notmuch show buffer."
   ;; FIXME Only works for `notmuch-show' because of notmuch's strange
   ;; buffer handling. See `notmuch-search' as an example. Basically,
-  ;; it is assumed that every search buffer can be identified via its
-  ;; name, and refreshing the buffer finds the buffer (!) via that
+  ;; notmuch assumes that every search buffer can be identified via
+  ;; its name. Refreshing the buffer finds the buffer (!) via that
   ;; function.
   (when (eq major-mode 'notmuch-show-mode)
     (let* ((from (notmuch-show-get-from))
@@ -436,7 +488,7 @@ Prepend the string PREFIX if it is not nil."
 (defun notmuch-alert-select-one (prompt alerts)
   "PROMPT the user to choose between ALERTS.
 ALERTS is a list of alerts."
-  (acomplete prompt alerts
+  (notmuch-alert--complete prompt alerts
 	     :string-fn #'notmuch-alert-description))
 
 (defvar notmuch-alert-visit-quit-when-pressed-twice t
@@ -465,8 +517,9 @@ Change this function to add completion backends."
 			    (seq-filter #'notmuch-alert-bm-has-active-alert-p bookmark-alist)
 			    (seq-filter #'notmuch-alert-bm-has-inactive-alert-p bookmark-alist)
 			    (seq-filter #'notmuch-alert-bm-has-no-alert-p bookmark-alist))))
-	  (setq result    (acomplete "Select bookmark: " collection
-				     :string-fn (apply-partially #'notmuch-alert-pp-line notmuch-alert-bm-prettyprint-scheme))))
+	  (setq result (notmuch-alert--complete "Select bookmark: "
+			 collection
+			 :string-fn (apply-partially #'notmuch-alert-pp-line notmuch-alert-bm-prettyprint-scheme))))
       ;; repair keymap in cleanup form, irrespective of result:
       (when notmuch-alert-visit-quit-when-pressed-twice
 	(define-key (notmuch-alert-get-minibuffer-map) keys backup))
