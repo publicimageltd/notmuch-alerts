@@ -1,6 +1,6 @@
 ;;; notmuch-alert.el --- use notmuch bookmarks as alerts  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019  
+;; Copyright (C) 2019
 
 ;; Author:  <joerg@joergvolbers.de>
 ;; Keywords: mail
@@ -34,7 +34,7 @@
 ;; This package provides some functions which help to construct
 ;; alerts, e.g. to count mails.
 
-;; This file is NOT part of notmuch or the notmuch emacs suite.
+;; This file is NOT part of notmuch or the notmuch Emacs suite.
 
 ;;; Code:
 
@@ -51,7 +51,7 @@ mandatory element is the name of a function. This function
 recieves two arguments, the bookmark object and its associated
 alert, if any; and returns a string. The second, optional element
 is used to specify some further modifications of the string. This
-second element is a property list. 
+second element is a property list.
 
    ((functionname (:prop val :prop2 val2 ...)
     (functionname)
@@ -88,7 +88,7 @@ See also `notmuch-alert-pp-column'.")
   count
   status
   ;; All for deciding about the status:
-  filter 
+  filter
   (operator #'notmuch-alert-count>0-p)
   ;; Offer standardized information:
   type
@@ -196,7 +196,7 @@ Returns the installed alert or nil if someting went wrong."
     (notmuch-alert-remove-alert bm)))
 
 (defun notmuch-alert-set-tare (bookmark tare)
-  "Set the tare for BOOKMARK."
+  "Set TARE for BOOKMARK."
   (bookmark-prop-set bookmark 'tara tare)
   (notmuch-alert-maybe-save-bookmark-alist))
 
@@ -220,7 +220,7 @@ Returns the installed alert or nil if someting went wrong."
      (concat " AND " filter))))
 
 (defun notmuch-alert-notmuch-count (query)
-  "Query the notmuch database and return the result as an integer."
+  "Count the number of mails matching QUERY."
   (string-to-number
    (notmuch-command-to-string "count" query)))
   
@@ -269,7 +269,7 @@ defined. This correction can be turned of by setting NO-CORRECTION."
   "Face for the status string 'INACTIVE'.")
 
 (defun notmuch-alert-pprinter:state (bookmark alert)
-  "Return colorized status string for BOOKMARK and ALERT."
+  "Pretty print BOOKMARK: Return status of ALERT as a string."
   (if (not alert)
       (propertize "BOOKMARK" 'face 'notmuch-alert-state-bookmark)
     (if (notmuch-alert-status alert)
@@ -277,7 +277,7 @@ defined. This correction can be turned of by setting NO-CORRECTION."
       (propertize "INACTIVE" 'face 'notmuch-alert-state-inactive-alert))))
 
 (defun notmuch-alert-pprinter:count (bookmark alert)
-  "Return the total count matching BOOKMARK and ALERT.
+  "Pretty print BOOKMARK: Return matching count of ALERT.
 If an alert exists, just display its current count, else query
 the notmuch database directly."
   (let* ((count (if alert
@@ -286,7 +286,7 @@ the notmuch database directly."
     (concat "(" (notmuch-hello-nice-number count) ")")))
 
 (defun notmuch-alert-pprinter:alert-info (bookmark alert)
-  "Return information on ALERT."
+  "Pretty print BOOKMARK: Return information on its ALERT."
   (when alert
     ;; TODO Durch eigene Berechnung der Anzeige ersetzen,
     ;; dann auch mit propertized string (...-active-state)
@@ -294,16 +294,17 @@ the notmuch database directly."
 				 (notmuch-alert-description alert))))
 
 (defun notmuch-alert-pprinter:bm-name (bookmark alert)
-  "Return the BOOKMARK's name."
+  "Pretty print BOOKMARK: Return BOOKMARK's name.
+ALERT is ignored."
   (bookmark-name-from-full-record bookmark))
 
 (defun notmuch-alert-pprinter:bm-tare (bookmark alert)
-  "Return information on the BOOKMARK's tare setting."
+  "Pretty print BOOKMARK: Return tare of ALERT."
   (when-let* ((tare (notmuch-alert-get-tare bookmark)))
     (unless (<= tare 0)
       (format "Tare set to %d." tare))))
 
-(setq notmuch-alert-bm-prettyprint-scheme
+(defvar notmuch-alert-bm-prettyprint-scheme
       '((notmuch-alert-pprinter:state       (:width 8))
 	(" ")
 	(notmuch-alert-pprinter:count       (:width 8))
@@ -311,38 +312,43 @@ the notmuch database directly."
 	(notmuch-alert-pprinter:bm-name     (:width 40))
 	(notmuch-alert-pprinter:alert-info  (:concat-if "."))
 	(" ")
-	(notmuch-alert-pprinter:bm-tare)))
+	(notmuch-alert-pprinter:bm-tare))
+      "Scheme responsible for pretty printing alerts and bookmarks.
+For information on the scheme, see `notmuch-alert-pp-column'.")
 
 ;; The pretty printing infrastructure:
 
 (defun notmuch-alert-pp-column (bookmark pprinter mods)
   "Pretty print BOOKMARK by passing it to PPRINTER and applying MODS.
-PPRINTER is a function which accepts two arguments, the bookmark
-and an alert object (which might be nil). 
+
+The function PPRINTER accepts two arguments, the bookmark object
+and an alert object (which might be nil).
 
 As a special case, PPRINTER can also be a string, which is then
-used directly.
+printed unchanged.
 
 MODS is a property list and should be either NIL or one of the
 following:
 
- (:width <n>)
- (:face (facespec))
- (:concat-if \"string\")
-"
+ (:width <n>)            ;; restrict or pad output to <n> characters
+ (:face (facespec))      ;; print string with this face
+ (:concat-if \"string\") ;; if return value is nonempty, add \"string\""
   (let* ((alert (notmuch-alert-get bookmark))
 	 (s     (if (stringp pprinter) pprinter
 		  (funcall pprinter bookmark alert))))
     (if (null mods)
 	s
+      ;; mod 'concat-if':
       (when-let* ((concat-if (plist-get mods :concat-if)))
 	(when s
 	  (setq s (concat s concat-if))))
+      ;; mod 'width':
       (when-let* ((width (plist-get mods :width)))
 	(let* ((pad (- width (string-width s))))
 	  (if (<= pad 0)
 	      (setq s (substring s 0 width))
 	    (setq s (concat s (make-string pad ?\s))))))
+      ;; mod 'face':
       (when-let* ((face-specs (plist-get mods :face)))
 	(setq s (funcall #'propertize s 'face face-specs))))
     s))
@@ -352,24 +358,18 @@ following:
 SCHEME is a list of cells, each defining a new column (see
 `notmuch-alert-pp-column'.)
 Returns a string."
-  (string-join 
+  (string-join
    (seq-map (lambda (scheme-spec)
 	      (notmuch-alert-pp-column bookmark (first scheme-spec) (second scheme-spec)))
 	    scheme)))
-
-;; TODO Unused, delete me.
-(defun notmuch-alert-bm-pp-all (scheme collection)
-  "Convert a COLLECTION of bookmarks to a pretty printed list of strings, using SCHEME.
-For the structure of scheme, see the documentation of
-`notmuch-alert-bm-prettyprint-scheme'."
-  (seq-map (apply-partially #'notmuch-alert-pp-line scheme) collection))
 
 
 ;;; * Information on alerts
 
 (defun notmuch-alert-status-string (alert &optional inactive-string prefix)
   "Return the status of ALERT as an informative string.
-If alert is not active, return INACTIVE-STRING."
+If alert is not active, return INACTIVE-STRING.
+Prepend the string PREFIX if it is not nil."
   (if (notmuch-alert-status alert)
       (format (concat prefix (notmuch-alert-format-string alert))
 	      (notmuch-alert-count alert))
@@ -379,7 +379,7 @@ If alert is not active, return INACTIVE-STRING."
   "Display information about ALERT in the echo area."
   (let* ((status (notmuch-alert-status alert))
 	 (tara   (or (notmuch-alert-tara alert) 0)))
-    (message 
+    (message
      (concat "Alert"
 	     " '" (or (notmuch-alert-description alert) "no description") "' "
 	     "is " (if status "ACTIVE" "INACTIVE")
@@ -425,14 +425,15 @@ If alert is not active, return INACTIVE-STRING."
 	(notmuch-alert-display-info alert)
       (user-error "No alert defined"))))
 
-;;;###autoload 
+;;;###autoload
 (defun notmuch-alert-display ()
   "Display information about the current buffer's alert."
   (interactive)
   (notmuch-alert-display-info-via-buffer))
 
 (defun notmuch-alert-select-one (prompt alerts)
-  "Choose between one of the ALERTS."
+  "PROMPT the user to choose between ALERTS.
+ALERTS is a list of alerts."
   (acomplete prompt alerts
 	     :string-fn #'notmuch-alert-description))
 
@@ -457,7 +458,7 @@ Change this function to add completion backends."
       (define-key (notmuch-alert-get-minibuffer-map) keys 'minibuffer-keyboard-quit))
     ;;
     (notmuch-alert-update-all)
-    (unwind-protect 
+    (unwind-protect
 	(let* ((collection (append
 			    (seq-filter #'notmuch-alert-bm-has-active-alert-p bookmark-alist)
 			    (seq-filter #'notmuch-alert-bm-has-inactive-alert-p bookmark-alist)
@@ -475,9 +476,16 @@ Change this function to add completion backends."
 	(push-mark)
 	(bookmark-jump result)))))
 
-;; Useful macro for dealing with indirect access to alerts via the current buffer:
+;; Useful macro for accessing an alert indirectly, via the current
+;; buffer:
 (defmacro notmuch-alert-with-current-buffer (bookmark-symbol alert-symbol &rest body)
-  "Execute BODY with current buffer's bookmark and alert bound to BOOKMARK-SYMBOL and ALERT-SYMBOL."
+  "Set ALERT-SYMBOL and BOOKMARK-SYMBOL and then execute BODY.
+
+Use current buffer's bookmark and alert to bind BOOKMARK-SYMBOL
+and ALERT-SYMBOL.
+
+Throw an error if the current buffer is not bookmarked or has no
+alert."
   (declare (indent 2)
 	   (debug (symbolp symbolp &rest form)))
   (let* ((_bm     (intern (symbol-name bookmark-symbol)))
@@ -528,8 +536,9 @@ The available alerts are listed in `notmuch-alerts'."
 ;;;###autoload
 (defun notmuch-alert-tare (&optional just-display)
   "Set the tare for the current buffer.
-With prefix, just display the current value.
-With double prefix, remove the tare."
+With prefix JUST-DISPLAY set to '(4), do not set the value, just
+display it. With prefix JUSt-DISPLAY set to '(16), remove the
+tare."
   (interactive "P")
   (notmuch-alert-with-current-buffer bm alert
     (let* ((count      (or (notmuch-alert-count alert)
@@ -548,16 +557,12 @@ With double prefix, remove the tare."
 
 ;;; Convenience functions
 
-(defun notmuch-alert-copy-iff-bookmark (bookmark)
-  "Copy bookmark if it is a notmuch bookmark, else pass it unchanged."
-  (if (notmuch-bookmarks-record-p bookmark)
-      (notmuch-bookmarks-copy-bookmark bookmark)
-    bookmark))
-
 (defun notmuch-alert-remove-all-alerts ()
-  "Remove all ALERTS from the bookmark list, keeping the bookmarks."
+  "Remove all notmuch alert bookmarks from the bookmark list."
   (setq bookmark-alist
-	(seq-map #'notmuch-alert-copy-iff-bookmark bookmark-alist)))
+	(seq-filter
+	 (lambda (bm) (not (notmuch-alert-bm-has-alert-p bm)))
+	 bookmark-alist)))
 
 ;; Hook into notmuch ecosystem
 
