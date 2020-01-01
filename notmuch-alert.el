@@ -1,9 +1,12 @@
-;;; notmuch-alert.el --- use notmuch bookmarks as alerts  -*- lexical-binding: t; -*-
+;;; notmuch-alert.el --- Use notmuch bookmarks as alerts  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019
 
 ;; Author:  <joerg@joergvolbers.de>
+;; Package-Requires: ((seq "2.20") (emacs "26.1") (notmuch "0.1"))
+;; Version: 0.1
 ;; Keywords: mail
+;; URL: https://github.com/publicimageltd/notmuch-alerts
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -40,7 +43,10 @@
 
 (require 'notmuch)
 (require 'notmuch-bookmarks)
+(require 'cl-lib)
+(require 'subr-x)
 (require 'acomplete)
+
 ;;; * Global Variables
 
 (defvar notmuch-alert-bm-prettyprint-scheme
@@ -268,7 +274,7 @@ defined. This correction can be turned of by setting NO-CORRECTION."
   '((t . (:foreground "dimgrey" :weight bold)))
   "Face for the status string 'INACTIVE'.")
 
-(defun notmuch-alert-pprinter:state (bookmark alert)
+(defun notmuch-alert-pprinter--state (bookmark alert)
   "Pretty print BOOKMARK: Return status of ALERT as a string."
   (if (not alert)
       (propertize "BOOKMARK" 'face 'notmuch-alert-state-bookmark)
@@ -276,7 +282,7 @@ defined. This correction can be turned of by setting NO-CORRECTION."
 	(propertize "ACTIVE" 'face 'notmuch-alert-state-active-alert)
       (propertize "INACTIVE" 'face 'notmuch-alert-state-inactive-alert))))
 
-(defun notmuch-alert-pprinter:count (bookmark alert)
+(defun notmuch-alert-pprinter--count (bookmark alert)
   "Pretty print BOOKMARK: Return matching count of ALERT.
 If an alert exists, just display its current count, else query
 the notmuch database directly."
@@ -285,7 +291,7 @@ the notmuch database directly."
 		  (notmuch-alert-notmuch-count (notmuch-bookmarks-query bookmark)))))
     (concat "(" (notmuch-hello-nice-number count) ")")))
 
-(defun notmuch-alert-pprinter:alert-info (bookmark alert)
+(defun notmuch-alert-pprinter--alert-info (bookmark alert)
   "Pretty print BOOKMARK: Return information on its ALERT."
   (when alert
     ;; TODO Durch eigene Berechnung der Anzeige ersetzen,
@@ -293,26 +299,26 @@ the notmuch database directly."
     (notmuch-alert-status-string alert
 				 (notmuch-alert-description alert))))
 
-(defun notmuch-alert-pprinter:bm-name (bookmark alert)
+(defun notmuch-alert-pprinter--bm-name (bookmark alert)
   "Pretty print BOOKMARK: Return BOOKMARK's name.
 ALERT is ignored."
   (bookmark-name-from-full-record bookmark))
 
-(defun notmuch-alert-pprinter:bm-tare (bookmark alert)
+(defun notmuch-alert-pprinter--bm-tare (bookmark alert)
   "Pretty print BOOKMARK: Return tare of ALERT."
   (when-let* ((tare (notmuch-alert-get-tare bookmark)))
     (unless (<= tare 0)
       (format "Tare set to %d." tare))))
 
 (defvar notmuch-alert-bm-prettyprint-scheme
-      '((notmuch-alert-pprinter:state       (:width 8))
+      '((notmuch-alert-pprinter--state       (:width 8))
 	(" ")
-	(notmuch-alert-pprinter:count       (:width 8))
+	(notmuch-alert-pprinter--count       (:width 8))
 	(" ")
-	(notmuch-alert-pprinter:bm-name     (:width 40))
-	(notmuch-alert-pprinter:alert-info  (:concat-if "."))
+	(notmuch-alert-pprinter--bm-name     (:width 40))
+	(notmuch-alert-pprinter--alert-info  (:concat-if "."))
 	(" ")
-	(notmuch-alert-pprinter:bm-tare))
+	(notmuch-alert-pprinter--bm-tare))
       "Scheme responsible for pretty printing alerts and bookmarks.
 For information on the scheme, see `notmuch-alert-pp-column'.")
 
@@ -387,8 +393,7 @@ Prepend the string PREFIX if it is not nil."
 	     (notmuch-alert-status-string alert nil "Counted ")
 	     (when (> tara 0)
 	       (format " (ignoring %s mails as tare)" tara))
-	     "."
-	     ))))
+	     "."))))
 
 (defun notmuch-alert-set-buffer-name-if-unique (buffer name)
   "Set BUFFER's name to NAME if it is not already used by some other buffer."
@@ -398,18 +403,11 @@ Prepend the string PREFIX if it is not nil."
 
 (defun notmuch-alert-set-sensible-buffer-name ()
   "Set a better buffer name for the currently visited notmuch show buffer."
-  ;; FIXME does not work because of notmuch's strange buffer handling.
-  ;; See `notmuch-search' as an example. Basically, it is assumed that every search buffer can be identified
-  ;; via its name, and refreshing the buffer finds the buffer (!) via that function.
-  ;;
-  ;; (if-let* ((is-notmuch (memq
-  ;; major-mode '(notmuch-search-mode notmuch-show-mode
-  ;; notmuch-tree-mode notmuch-message-mode))) (bm
-  ;; (notmuch-bookmarks-get-buffer-bookmark)) (bm-name
-  ;; (bookmark-name-from-full-record bm)))
-  ;; (notmuch-alert-set-buffer-name-if-unique (current-buffer)
-  ;; bm-name)
-  ;;
+  ;; FIXME Only works for `notmuch-show' because of notmuch's strange
+  ;; buffer handling. See `notmuch-search' as an example. Basically,
+  ;; it is assumed that every search buffer can be identified via its
+  ;; name, and refreshing the buffer finds the buffer (!) via that
+  ;; function.
   (when (eq major-mode 'notmuch-show-mode)
     (let* ((from (notmuch-show-get-from))
 	   (subject (notmuch-show-get-subject))
