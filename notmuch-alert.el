@@ -574,7 +574,7 @@ This function should not be called directly. Use
   (let* ((hook-fn (if uninstall 'remove-hook 'add-hook)))
     (funcall hook-fn 'notmuch-show-hook #'notmuch-alert-set-sensible-buffer-name))
   (unless uninstall
-    (eval-after-load 'ivy
+    (with-eval-after-load 'ivy
       (add-to-list 'ivy-sort-functions-alist '(notmuch-alert-visit)))))
 
 ;;;###autoload
