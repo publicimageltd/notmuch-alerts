@@ -564,11 +564,24 @@ tare."
 
 ;; Hook into notmuch ecosystem
 
-(add-hook 'notmuch-show-hook #'notmuch-alert-set-sensible-buffer-name)
-;; (add-hook 'notmuch-tree-mode-hook #'notmuch-alert-set-sensible-buffer-name)
-;; (add-hook 'notmuch-search-mode-hook #'notmuch-alert-set-sensible-buffer-name)
+(defun notmuch-alerts-install (&optional uninstall)
+  "Install alerting feature on top of notmuch bookmarks.
+If UNINSTALL is non-nil, uninstall the feature.
 
-(add-to-list 'ivy-sort-functions-alist '(notmuch-alert-visit))
+This function should not be called directly. Use
+`notmuch-alerts-mode' instead."
+  (let* ((hook-fn (if uninstall 'remove-hook 'add-hook)))
+    (funcall hook-fn 'notmuch-show-hook #'notmuch-alert-set-sensible-buffer-name))
+  (unless uninstall
+    ;; we don't need to undo the following:
+    (eval-after-load 'ivy
+      (add-to-list 'ivy-sort-functions-alist '(notmuch-alert-visit))))
+
+;;;###autoload
+(define-minor-mode notmuch-alerts-mode
+  "Allow using notmuch bookmarks as alerts."
+  :global t
+  (notmuch-alerts-install (not notmuch-alerts-mode)))
 
 (provide 'notmuch-alert)
 ;;; notmuch-alert.el ends here
