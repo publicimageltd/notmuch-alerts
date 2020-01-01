@@ -564,7 +564,7 @@ tare."
 
 ;; Hook into notmuch ecosystem
 
-(defun notmuch-alerts-install (&optional uninstall)
+(defun notmuch-alert-install (&optional uninstall)
   "Install alerting feature on top of notmuch bookmarks.
 If UNINSTALL is non-nil, uninstall the feature.
 
@@ -578,10 +578,10 @@ This function should not be called directly. Use
       (add-to-list 'ivy-sort-functions-alist '(notmuch-alert-visit))))
 
 ;;;###autoload
-(define-minor-mode notmuch-alerts-mode
+(define-minor-mode notmuch-alert-mode
   "Allow using notmuch bookmarks as alerts."
   :global t
-  (notmuch-alerts-install (not notmuch-alerts-mode)))
+  (notmuch-alert-install (not notmuch-alert-mode)))
 
 (provide 'notmuch-alert)
 ;;; notmuch-alert.el ends here
