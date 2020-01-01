@@ -574,11 +574,10 @@ tare."
 If UNINSTALL is non-nil, uninstall the feature.
 
 This function should not be called directly. Use
-`notmuch-alerts-mode' instead."
+`notmuch-alert-mode' instead."
   (let* ((hook-fn (if uninstall 'remove-hook 'add-hook)))
     (funcall hook-fn 'notmuch-show-hook #'notmuch-alert-set-sensible-buffer-name))
   (unless uninstall
-    ;; we don't need to undo the following:
     (eval-after-load 'ivy
       (add-to-list 'ivy-sort-functions-alist '(notmuch-alert-visit)))))
 
