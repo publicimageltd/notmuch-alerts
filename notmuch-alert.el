@@ -65,12 +65,12 @@
   "Scheme to pretty print bookmark items in interactive selections.
 
 The value is list of lists. Each inner list item consists of two
-elements maximum. 
+elements maximum.
 
 The first element (the car) is mandatory: it is the name of a
 pretty printing function. This function receives two arguments,
 the bookmark object and its associated alert, if any. It returns
-a string. 
+a string.
 
 The second, optional element of the inner list can be used to
 specify some further modifications of the string. This second
@@ -89,11 +89,11 @@ properties.")
 
 ;; This structure defines an alert. An alert can be hooked into a
 ;; bookmark by associating it with the property `alert'. The alert can
-;; then be "checked" via its bookmark. In checking, the bookmark
-;; query, in conjunction with the alert's filter query, will be used
-;; to count any "relevant" mails. This result is then passed to the
-;; alert operator, which determines wether the alert is `active' or
-;; not. The operator function (with the number of counted mails as its
+;; then be "checked" via its bookmark. When checking, the bookmark
+;; query, in conjunction with the alert's filter query, is used to
+;; count any "relevant" mails. This result is then passed to the alert
+;; operator, which determines wether the alert is `active' or not. The
+;; operator function (with the number of counted mails as its
 ;; argument) just returns a status: either nil, meaning "inactive
 ;; alert", or t, meaning "alert should be raised, there are 'new'
 ;; mails". This boolean status will be stored in a separate slot of
@@ -107,17 +107,17 @@ properties.")
   filter
   (operator #'notmuch-alert-count>0-p)
   ;; Offer standardized information:
-  type
-  description
-  format-string)
+  type                ;; symbol for the type class; not used yet 
+  description         ;; Description for status string
+  format-string)      ;; String passed to format with one string argument (i.e. '%s uncount mails')
 
 ;; Alert operators:
 
 (defun notmuch-alert-count>0-p (count)
-  "Check for COUNT being > 0."
+  "Check for COUNT being defined and > 0."
   (when count (> count 0)))
 
-;; Predefined alerts:
+;; Predefine alerts:
 
 (defun notmuch-alert-unread ()
   "Create a new 'unread mails' alert object."
