@@ -47,37 +47,43 @@
 
 (require 'notmuch)
 (require 'notmuch-bookmarks)
+(require 'acomplete)
 (require 'cl-lib)
 (require 'subr-x)
-(require 'acomplete)
 
 ;;; * Global Variables
 
 (defvar notmuch-alert-bm-prettyprint-scheme
-  nil
+  '((notmuch-alert-pprinter--state       (:width 8))
+    (" ")
+    (notmuch-alert-pprinter--count       (:width 8))
+    (" ")
+    (notmuch-alert-pprinter--bm-name     (:width 40))
+    (notmuch-alert-pprinter--alert-info  (:concat-if "."))
+    (" ")
+    (notmuch-alert-pprinter--bm-tare))
   "Scheme to pretty print bookmark items in interactive selections.
-The value has to be a list with max. two elements. The first,
-mandatory element is the name of a function. This function
-recieves two arguments, the bookmark object and its associated
-alert, if any; and returns a string. The second, optional element
-is used to specify some further modifications of the string. This
-second element is a property list.
+
+The value is list of lists. Each inner list item consists of two
+elements maximum. 
+
+The first element (the car) is mandatory: it is the name of a
+pretty printing function. This function receives two arguments,
+the bookmark object and its associated alert, if any. It returns
+a string. 
+
+The second, optional element of the inner list can be used to
+specify some further modifications of the string. This second
+element is a property list.
+
+Schematic example:
 
    ((functionname (:prop val :prop2 val2 ...)
     (functionname)
     (functionname (:prop val))))
 
-The property list (second element) currently accepts two
-properties. If you want to apply several modifications, use one
-list with all properties and values combined.
-
-  (:width <n>) - The total maximum size of the string, to which
-  it is trimmed, if necessary.
-
-  (:face (facespecs...)) - Face specifications which will be
-  applied to the string using `propertize'.
-
-See also `notmuch-alert-pp-column'.")
+See also `notmuch-alert-pp-column' for a list of the allowed
+properties.")
 
 ;;; * Alert Object
 
@@ -318,18 +324,6 @@ ALERT is ignored."
   (when-let* ((tare (notmuch-alert-get-tare bookmark)))
     (unless (<= tare 0)
       (format "Tare set to %d." tare))))
-
-(defvar notmuch-alert-bm-prettyprint-scheme
-      '((notmuch-alert-pprinter--state       (:width 8))
-	(" ")
-	(notmuch-alert-pprinter--count       (:width 8))
-	(" ")
-	(notmuch-alert-pprinter--bm-name     (:width 40))
-	(notmuch-alert-pprinter--alert-info  (:concat-if "."))
-	(" ")
-	(notmuch-alert-pprinter--bm-tare))
-      "Scheme responsible for pretty printing alerts and bookmarks.
-For information on the scheme, see `notmuch-alert-pp-column'.")
 
 ;; The pretty printing infrastructure:
 
