@@ -451,7 +451,7 @@ Change this function to add completion backends."
 (defun notmuch-alert-visit ()
   "Jump to one of the bookmarks with an alert."
   (interactive)
-  (let* (result
+  (let* (result backup
 	 (keys   (this-command-keys)))
     ;; 
     (when notmuch-alert-visit-quit-when-pressed-twice
@@ -568,7 +568,7 @@ tare."
 
 ;; Hook into notmuch ecosystem
 
-(defun notmuch-alert-install (&optional uninstall)
+(defun notmuch-alert-mode-install (&optional uninstall)
   "Install alerting feature on top of notmuch bookmarks.
 If UNINSTALL is non-nil, uninstall the feature.
 
@@ -579,13 +579,13 @@ This function should not be called directly. Use
   (unless uninstall
     ;; we don't need to undo the following:
     (eval-after-load 'ivy
-      (add-to-list 'ivy-sort-functions-alist '(notmuch-alert-visit))))
+      (add-to-list 'ivy-sort-functions-alist '(notmuch-alert-visit)))))
 
 ;;;###autoload
 (define-minor-mode notmuch-alert-mode
   "Allow using notmuch bookmarks as alerts."
   :global t
-  (notmuch-alert-install (not notmuch-alert-mode)))
+  (notmuch-alert-mode-install (not notmuch-alert-mode)))
 
 (provide 'notmuch-alert)
 ;;; notmuch-alert.el ends here
