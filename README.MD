@@ -77,10 +77,11 @@ into the bookmark. If `bookmark-save-flag`is `t`, automatically save
 the changed bookmark.
 
 The available alerts are predefined in the global variable
-`notmuch-alerts`. See the documentation there for how to add new
-alerts.
+`notmuch-alerts`. See below for adding new alerts.
 
-Currently, there are three alerts predefined:
+## Predefined alerts
+
+ Currently, there are three alerts defined:
 
 <dl>
  <dt>notmuch-alert-unread</dt>
@@ -93,13 +94,53 @@ Currently, there are three alerts predefined:
 <dd>Check for any mails from today.</dd>
 
  </dl>
+ 
+## Defining new alerts
+
+To define a new alert, you have to follow these steps:
+
+ 1. Create a function which returns a new `notmuch-alert` object.
+ 2. Add this function name to  the variable `notmuch-alerts`.
+ 
+Let's define a new alert which is raised when a new unread attachment
+has arrived. 
+
+First, you define the alert object itself. This is usally done via
+`make-notmuch-alert`. You pass to it as one of its argument a filter
+query. In our case, a good query would be `date:today and
+is:attachment`. Thus, you create the following function:
+
+``` emacs-lisp
+(defun notmuch-alert-unread-attachment ()
+  "Create a new alert object for unread mails with attachment."
+  (make-notmuch-alert :filter "date:today"
+		      :description "Check for mails from today"
+		      :format-string "%d mails from today"))
+
+```
+
+The keywords are rather self-explaning. `:description` is the
+description of the alert as it will be presented to the user, i.e.
+when selecting one of the available alerts for installation.
+`:format-string` will be used to present the number of active mails
+(use `%d` since the count is an integer).
+
+In a second step, you add this function to `notmuch-alerts`:
+
+``` emacs-lisp
+(add-to-list 'notmuch-alerts 'notmuch-alert-unread-attachment)
+```
+
+That's all. You can now set your new alert on an existing bookmark via
+`notmuch-alert-install`.
+ 
 ## notmuch-alert-uninstall
 
 Uninstall current buffer's bookmark alert.
 
 ## notmuch-alert-visit
 
-Present the user a selection consisting of, in this order:
+Present the user a selection consisting of, in this order,
 
  - a list of all active alerts,
  - a list of all inactive alerts, and ultimately
@@ -115,7 +156,7 @@ alerts appear on the top of the list, pressing the key once gives you
 an immediate feedback about newly arrived mails. By pressing the key
 again, you return to work.
 
-If you do not like that behaviour, set
+If you do not like this behaviour, set
 `notmuch-alert-visit-quit-when-pressed-twice` to `nil`.
 
 ## notmuch-alert-tare

@@ -195,8 +195,9 @@ Return the selected data item (not its string representation)."
   '(notmuch-alert-unread
     notmuch-alert-any
     notmuch-alert-today)
-  "List of available alerts (for interactive selection).
-Each element is a function name. The function has to return an
+  "List of alerts offered by `notmuch-alert-install'.
+
+Each element is a function name. The function returns an
 alert object.")
 
 ;;; * Stuffing Alerts into Bookmarks:
@@ -553,7 +554,7 @@ alert."
 ;;;###autoload
 (defun notmuch-alert-install ()
   "Install an alert for the current buffer.
-The available alerts are listed in `notmuch-alerts'."
+The available alerts are defined by `notmuch-alerts'."
   (interactive)
   (let* ((bm (notmuch-bookmarks-get-buffer-bookmark)))
     (if (null bm)
