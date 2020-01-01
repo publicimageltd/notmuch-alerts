@@ -23,19 +23,23 @@
 
 ;;; Commentary:
 
-;; This package defines functionality to check bookmarked queries for
-;; 'new' or 'unread' mails. It provides an API to create, check and
-;; remove alerts, which hook into an existing bookmark.
+;; This package allows to check bookmarked notmuch queries for 'new'
+;; or 'unread' mails. It provides an API to visit, create, install and
+;; remove alerts. Alerts are created 'on top' of existing notmuch
+;; bookmarks.
 ;;
-;; An alert simply is a function receiving one argument, a bookmark It
-;; is the function's task to build the query (using the bookmark) and
-;; to check for matching mails, etc. The return value of the alert
+;; To activate the package, turn on the global minor mode
+;; `notmuch-alert-minor-mode'.
+;;
+;; An alert simply is a function receiving one argument, a bookmark.
+;; It is up to the function to build the query (using the bookmark)
+;; and to check for matching mails, etc. The return value of the alert
 ;; function must be either nil, indicating that nothing happened
 ;; ("inactive alert"), or the number of relevant mails matched
 ;; ("active alert").
 ;;
-;; This package provides some functions which help to construct
-;; alerts, e.g. to count mails.
+;; This package provides some helper functions to construct alerts,
+;; e.g. to count mails.
 
 ;; This file is NOT part of notmuch or the notmuch Emacs suite.
 
