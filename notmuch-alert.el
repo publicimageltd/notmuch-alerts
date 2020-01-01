@@ -459,25 +459,24 @@ Change this function to add completion backends."
   (interactive)
   (let* (result backup
 	 (keys   (this-command-keys)))
-    ;; 
     (when notmuch-alert-visit-quit-when-pressed-twice
       ;;  modify map so that a repetition of the calling key sequence cancels the selection:
       (setq backup (lookup-key (notmuch-alert-get-minibuffer-map) keys))
       (define-key (notmuch-alert-get-minibuffer-map) keys 'minibuffer-keyboard-quit))
-    ;;
+    ;; update alert counts:
     (notmuch-alert-update-all)
+    ;; offer selection:
     (unwind-protect
 	(let* ((collection (append
 			    (seq-filter #'notmuch-alert-bm-has-active-alert-p bookmark-alist)
 			    (seq-filter #'notmuch-alert-bm-has-inactive-alert-p bookmark-alist)
 			    (seq-filter #'notmuch-alert-bm-has-no-alert-p bookmark-alist))))
-	       ;;
 	  (setq result    (acomplete "Select bookmark: " collection
 				     :string-fn (apply-partially #'notmuch-alert-pp-line notmuch-alert-bm-prettyprint-scheme))))
-      ;; cleanup form:
+      ;; repair keymap in cleanup form, irrespective of result:
       (when notmuch-alert-visit-quit-when-pressed-twice
 	(define-key (notmuch-alert-get-minibuffer-map) keys backup))
-      ;; respond to selection in a cleaned up environment:
+      ;; also respond to selection in an already cleaned up environment:
       (when result
 	(push-mark)
 	(bookmark-jump result)))))
