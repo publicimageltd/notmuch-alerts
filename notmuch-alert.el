@@ -385,18 +385,18 @@ Prepend the string PREFIX if it is not nil."
 	      (notmuch-alert-count alert))
     inactive-string))
 
-(defun notmuch-alert-display-info (alert)
-  "Display information about ALERT in the echo area."
+(defun notmuch-alert-display-info (bookmark alert)
+  "Display information about BOOKMARK's ALERT in the echo area."
   (let* ((status (notmuch-alert-status alert))
-	 (tara   (or (notmuch-alert-tara alert) 0)))
+	 (tare   (or (notmuch-alert-get-tare bookmark) 0)))
     (message
      (concat "Alert"
 	     " '" (or (notmuch-alert-description alert) "no description") "' "
 	     "is " (if status "ACTIVE" "INACTIVE")
 	     ". "
 	     (notmuch-alert-status-string alert nil "Counted ")
-	     (when (> tara 0)
-	       (format " (ignoring %s mails as tare)" tara))
+	     (when (> tare 0)
+	       (format " (ignoring %s mails as tare)" tare))
 	     "."))))
 
 (defun notmuch-alert-set-buffer-name-if-unique (buffer name)
@@ -422,9 +422,10 @@ Prepend the string PREFIX if it is not nil."
 
 (defun notmuch-alert-display-info-via-buffer (&optional buf)
   "Display information about BUF's alert in the echo area."
-  (let* ((alert (notmuch-alert-get-via-buffer buf)))
+  (let* ((alert (notmuch-alert-get-via-buffer buf))
+	 (bm    (notmuch-bookmarks-get-buffer-bookmark buf)))
     (if alert
-	(notmuch-alert-display-info alert)
+	(notmuch-alert-display-info bm alert)
       (user-error "No alert defined"))))
 
 ;;;###autoload
@@ -532,7 +533,7 @@ The available alerts are listed in `notmuch-alerts'."
   (interactive)
   (notmuch-alert-with-current-buffer bm alert
     (if (notmuch-alert-update bm)
-	(notmuch-alert-display-info alert)
+	(notmuch-alert-display-info bm alert)
       (message "Alert inactive"))))
 
 ;;;###autoload
