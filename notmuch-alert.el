@@ -175,6 +175,11 @@ Returns the installed alert or nil if someting went wrong."
   (and (notmuch-bookmarks-record-p bookmark)
        (not (null (notmuch-alert-get bookmark)))))
 
+(defun notmuch-alert-bm-has-no-alert-p (bookmark)
+  "Check if BOOKMARK has no alert object."
+  (and (notmuch-bookmarks-record-p bookmark)
+       (not (notmuch-alert-get bookmark))))
+
 (defun notmuch-alert-bm-has-active-alert-p (bookmark)
   "Check if BOOKMARK has an active alert object."
   (and (notmuch-bookmarks-record-p bookmark)
@@ -456,7 +461,7 @@ Change this function to add completion backends."
 	 (keys   (this-command-keys)))
     ;; 
     (when notmuch-alert-visit-quit-when-pressed-twice
-      ;;  modify map so that a repetition of the calling key sequence cancels the selection
+      ;;  modify map so that a repetition of the calling key sequence cancels the selection:
       (setq backup (lookup-key (notmuch-alert-get-minibuffer-map) keys))
       (define-key (notmuch-alert-get-minibuffer-map) keys 'minibuffer-keyboard-quit))
     ;;
@@ -465,9 +470,7 @@ Change this function to add completion backends."
 	(let* ((collection (append
 			    (seq-filter #'notmuch-alert-bm-has-active-alert-p bookmark-alist)
 			    (seq-filter #'notmuch-alert-bm-has-inactive-alert-p bookmark-alist)
-			    (seq-filter (lambda (bm) (and (notmuch-bookmarks-record-p bm)
-							  (not (notmuch-alert-bm-has-alert-p bm))))
-					bookmark-alist))))
+			    (seq-filter #'notmuch-alert-bm-has-no-alert-p bookmark-alist))))
 	       ;;
 	  (setq result    (acomplete "Select bookmark: " collection
 				     :string-fn (apply-partially #'notmuch-alert-pp-line notmuch-alert-bm-prettyprint-scheme))))
