@@ -1,36 +1,40 @@
 # notmuch alerts
-Add and manage alerts on top of notmuch bookmarks
+Add and manage alerts 'on top' of notmuch bookmarks.
 
-This package defines functionality to check bookmarked queries for
-either 'new' or 'unread' mails. It further provides an API to create,
-check and remove alerts, which hook into an existing bookmark.
+This package allows check bookmarked notmuch queries for either 'new'
+or 'unread' mails. It further provides an API to visit, create, check
+and remove alerts. Alerts are always created 'on top' of existing
+notmuch bookmarks, that is, they extend a bookmared query by adding an
+additional filter query.
 
 This file is NOT part of notmuch or the notmuch emacs suite.
 
 # What is an alert?
 
-An alert simply is a function receiving one argument, a bookmark. It
-is the function's task to build a query (using the bookmark) and to
-check for matching mails, etc. The return value of the alert function
-must be either nil, indicating that nothing happened ("inactive
-alert"), or the number of relevant mails matched ("active alert").
-
-The package provides some functions which help to construct
-alerts, e.g. to count mails.
+An alert is a function receiving one argument, a bookmark. It is up to
+this function to build and run the query which checks for matching
+mails. The package provides some helpful functions for that. The
+return value of the alert function must be either `nil`, indicating
+that nothing happened ("inactive alert"), or the number of relevant
+mails matched ("active alert"), as an integer.
 
 # Features
 
- - Interactively add or remove alert in a bookmarked notmuch buffer
+ - Interactively add or remove alert in a bookmarked notmuch buffer.
  - Set a "tare" value for counting mails which is automatically
    subtracted before deciding whether there are any new or unread
-   mails.
+   mails. Thus, you can 'silence' an alert without changing the status
+   of the existing mails -- they are just not counted in.
  - Provide an interactive selection of all alerts and bookmarks,
    sorted by relevancy.
 
-# Requires
+# Dependencies
 
- - notmuch (of course)
- - notmuch-bookmarks.el
+This package depends on the following packages:
+
+ - Emacs > 26.1
+ - notmuch
+ - notmuch-bookmarks
  - acomplete (a package of my own, also available in this repository)
  
 # Installation
@@ -41,18 +45,21 @@ I have the following snippet in my `init.el`:
 (use-package notmuch-bookmarks
   :after notmuch
   :config
-  (notmuch-bookmarks))
+  (notmuch-bookmarks-mode))
 
 (use-package notmuch-alert
+  :config
+  (notmuch-alert-mode)
   :bind*
   (:map global-map
 	("<f3>" . notmuch-alert-visit)))
 ```
 
-It is recommended to activate automatic saving of bookmarks. This way,
-your bookmarks with alerts become convenient constant entry points for
-accessing your mails, comparable to what you see in a normal mail
-client:
+It is recommended to activate the automatic saving of bookmarks. This
+way, your bookmarks with alerts become constant entry points for
+accessing your mails. The result comes very close to what you are used
+to in a normal mail client, yet preserves the "emacs" way of doing
+stuff:
 
 ```
 (use-package bookmark
@@ -70,14 +77,22 @@ into the bookmark. If `bookmark-save-flag`is `t`, automatically save
 the changed bookmark.
 
 The available alerts are predefined in the global variable
-`notmuch-alerts'. See there for how to add new alerts.
+`notmuch-alerts`. See the documentation there for how to add new
+alerts.
 
-Currently, there are three alerts defined:
+Currently, there are three alerts predefined:
 
- - notmuch-alert-unread: Check for any unread mails.
- - notmuch-alert-any: Check for any matching mails at all.
- - notmuch-alert-today: Check for any mails from today.
+<dl>
+ <dt>notmuch-alert-unread</dt>
+ <dd>Check for any unread mails.</dd>
  
+ <dt> notmuch-alert-any</dt>
+ <dd>Check for any mails matching the original bookmark query; no further filtering.<dd>
+
+<dt>notmuch-alert-today:</dt>
+<dd>Check for any mails from today.</dd>
+
+ </dl>
 ## notmuch-alert-uninstall
 
 Uninstall current buffer's bookmark alert.
@@ -86,21 +101,30 @@ Uninstall current buffer's bookmark alert.
 
 Present the user a selection consisting of, in this order:
 
- - all active alerts
- - all inactive alerts
- - all further notmuch bookmarks
+ - a list of all active alerts,
+ - a list of all inactive alerts, and ultimately
+ - a list of all other notmuch bookmarks, which have no alert
+   associated with it.
  
 ![Screenshot](screenshot.png)
 
 As a special bonus, calling `notmuch-alert-visit` modifies the keymap
 so that pressing the calling key twice will cancel the action. This is
-meant for offering a quick way to 'check mails'. If you do not like
-that behaviour, set `notmuch-alert-visit-quit-when-pressed-twice` to
-`nil`.
+meant for offering a quick way to 'check mails': Since all active
+alerts appear on the top of the list, pressing the key once gives you
+an immediate feedback about newly arrived mails. By pressing the key
+again, you return to work.
+
+If you do not like that behaviour, set
+`notmuch-alert-visit-quit-when-pressed-twice` to `nil`.
 
 ## notmuch-alert-tare
 
 Set the tare for the current buffer. With prefix, just display the
 current value. With double prefix, remove the tare.
+
+ Setting a tare of 0 effectively means to remove the tare.
+ 
+ 
 
 

@@ -29,7 +29,7 @@
 ;; bookmarks.
 ;;
 ;; To activate the package, turn on the global minor mode
-;; `notmuch-alert-minor-mode'.
+;; `notmuch-alert-mode'.
 ;;
 ;; An alert simply is a function receiving one argument, a bookmark.
 ;; It is up to the function to build the query (using the bookmark)
