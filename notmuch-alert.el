@@ -49,6 +49,7 @@
 (require 'notmuch-bookmarks)
 (require 'cl-lib)
 (require 'subr-x)
+(require 'rx)
 
 ;;; * Global Variables
 
@@ -469,6 +470,57 @@ Prepend the string PREFIX if it is not nil."
 	   (subject (notmuch-show-get-subject))
 	   (new-name (format "%s: %s" from subject)))
       (notmuch-alert-set-buffer-name-if-unique (current-buffer) new-name))))
+
+;;; * Easy setting of tags to include or exclude mails from an alert:
+
+(defvar notmuch-alert-single-tag-regexp 
+  (rx (: (or "is" "tag") ":" (group (one-or-more (not space)))))
+  "Regexp matching a simple notmuch tag search term.")
+
+(defvar notmuch-alert-complex-syntax-regexp
+  (rx (: (or "is" "tag") ":" (one-or-more (any "\"" ")" "(" ))))
+  "Regexp matching complex notmuch search terms.
+This regexp is used to weed out notmuch search term expressions
+which are too complex. In particular, this applies to delimiters
+such as parentheses or quotation marks, e.g. `tag:\\(pizza
+bob\\)'. Parsing such expressions requires to parse the whole
+expression syntactically.")
+
+(defun notmuch-alert-query-to-taglist (query)
+  "Convert the string QUERY into a list of tags."
+  (if (string-match notmuch-alert-complex-syntax-regexp query)
+      (user-error "Query '%s' cannot be parsed for tagging" query))
+  (notmuch-alert--do-reduce-query nil query))
+
+(defun notmuch-alert--do-reduce-query (acc rest-query)
+  "Recursively find tags in REST-QUERY and collect them in ACC."
+  (if (null rest-query)
+      acc
+    (if (string-match notmuch-alert-single-tag-regexp rest-query)
+	(let* ((end (match-end 1))
+	       (sub (match-string 1 rest-query)))
+	  (notmuch-alert--do-reduce-query
+	   (append (or acc) (list sub))
+	   (unless (= end (length rest-query))
+	     (substring rest-query end))))
+      acc)))
+
+;;;###autoload
+(defun notmuch-alert-remove-filter-tags (&optional set)
+  "Remove filter tags from the current mail.
+If SET is non-nil, set the tags."
+  (interactive "P")
+  (let* ((alert        (or (notmuch-alert-get-via-buffer)
+			   (user-error "No alert associated with the current buffer")))
+	 (taglist      (or (notmuch-alert-query-to-taglist (notmuch-alert-filter alert))
+			   (user-error "No tags defined in current alert's filter query")))
+	 (tag-changes  (seq-map (lambda (s) (concat (if set "+" "-") s))
+				taglist))
+	 (tag-fn  (cl-case major-mode
+		    ('notmuch-search-mode #'notmuch-search-tag)
+		    ('notmuch-tree-mode   #'notmuch-tree-tag)
+		    ('notmuch-show-mode   #'notmuch-show-tag))))
+    (funcall tag-fn tag-changes)))
 
 ;;; * Interactive Functions
 
