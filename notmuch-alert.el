@@ -488,6 +488,8 @@ expression syntactically.")
 
 (defun notmuch-alert-query-to-taglist (query)
   "Convert the string QUERY into a list of tags."
+  (if (or (string-empty-p query) (null query))
+      (user-error "Alert has no filter query"))
   (if (string-match notmuch-alert-complex-syntax-regexp query)
       (user-error "Query '%s' cannot be parsed for tagging" query))
   (notmuch-alert--do-reduce-query nil query))
