@@ -59,6 +59,11 @@ If this value is nil, do not implement any key."
   :type 'string
   :group 'notmuch-alert)
 
+(defcustom notmuch-alert-change-buffer-titles t
+  "Use a more informative buffer title when showing messages."
+  :type 'boolean
+  :group 'notmuch-alert)
+
 (defvar notmuch-alert-bmenu-original-keymap nil
   "Storage for original keymap of `bookmarks-bmenu'.")
 
@@ -474,7 +479,8 @@ Prepend the string PREFIX if it is not nil."
   ;; notmuch assumes that every search buffer can be identified via
   ;; its name. Refreshing the buffer finds the buffer (!) via that
   ;; function.
-  (when (eq major-mode 'notmuch-show-mode)
+  (when (and notmuch-alert-change-buffer-titles
+	     (eq major-mode 'notmuch-show-mode))
     (let* ((from (notmuch-show-get-from))
 	   (subject (notmuch-show-get-subject))
 	   (new-name (format "%s: %s" from subject)))
