@@ -53,6 +53,15 @@
 
 ;;; * Global Variables
 
+(defcustom notmuch-alert-bmenu-filter-key "A"
+  "Define this key in the bookmarks menu to filter out notmuch alerts.
+If this value is nil, do not implement any key."
+  :type 'string
+  :group 'notmuch-alert)
+
+(defvar notmuch-alert-bmenu-original-keymap nil
+  "Storage for original keymap of `bookmarks-bmenu'.")
+
 (defvar notmuch-alert-bm-prettyprint-scheme
   '((notmuch-alert-pprinter--state       (:width 8))
     (" ")
@@ -671,6 +680,7 @@ tare."
 	 (lambda (bm) (not (notmuch-alert-bm-has-alert-p bm)))
 	 bookmark-alist)))
 
+
 ;; Hook into notmuch ecosystem
 
 (defun notmuch-alert-mode-install (&optional uninstall)
@@ -679,11 +689,34 @@ If UNINSTALL is non-nil, uninstall the feature.
 
 This function should not be called directly. Use
 `notmuch-alert-mode' instead."
+  ;; install better buffer names:
   (let* ((hook-fn (if uninstall 'remove-hook 'add-hook)))
-    (funcall hook-fn 'notmuch-show-hook #'notmuch-alert-set-sensible-buffer-name))
+    (funcall hook-fn 'notmuch-show-hook
+	     #'notmuch-alert-set-sensible-buffer-name))
+  ;; set up for ivy completions:
   (unless uninstall
     (with-eval-after-load 'ivy
-      (add-to-list 'ivy-sort-functions-alist '(notmuch-alert-visit)))))
+      (add-to-list 'ivy-sort-functions-alist '(notmuch-alert-visit))))
+  ;; edit bmenu keymap:
+  (when notmuch-alert-bmenu-filter-key
+    (if uninstall
+	(when notmuch-alert-bmenu-original-keymap
+	  (setq bookmark-bmenu-mode-map
+		notmuch-alert-bmenu-original-keymap))
+      (setq notmuch-alert-bmenu-original-keymap
+	    (copy-keymap bookmark-bmenu-mode-map))
+      (define-key bookmark-bmenu-mode-map
+	notmuch-alert-bmenu-filter-key
+	'notmuch-alert-bmenu)))
+
+(defun notmuch-alert-bmenu ()
+  "Display bookmark menu only with notmuch alerts."
+  (interactive)
+  (let* ((bookmark-alist
+	  (seq-filter #'notmuch-alert-bm-has-alert-p bookmark-alist)))
+    (if (called-interactively-p 'interactive)
+	(call-interactively #'bookmark-bmenu-list)
+      (bookmark-bmenu-list))))
 
 ;;;###autoload
 (define-minor-mode notmuch-alert-mode
