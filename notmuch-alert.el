@@ -713,7 +713,7 @@ This function should not be called directly. Use
 	    (copy-keymap bookmark-bmenu-mode-map))
       (define-key bookmark-bmenu-mode-map
 	notmuch-alert-bmenu-filter-key
-	'notmuch-alert-bmenu)))
+	'notmuch-alert-bmenu))))
 
 (defun notmuch-alert-bmenu ()
   "Display bookmark menu only with notmuch alerts."
