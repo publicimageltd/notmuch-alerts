@@ -64,6 +64,11 @@ If this value is nil, do not implement any key."
   :type 'boolean
   :group 'notmuch-alert)
 
+(defcustom notmuch-alert-visit-quit-when-pressed-twice t
+  "Quit `notmuch-alert-visit' when the key it is bound to is pressed again."
+  :type 'boolean
+  :group 'notmuch-alert)
+
 (defvar notmuch-alert-bmenu-original-keymap nil
   "Storage for original keymap of `bookmarks-bmenu'.")
 
@@ -561,8 +566,6 @@ ALERTS is a list of alerts."
   (notmuch-alert--complete prompt alerts
 	     :string-fn #'notmuch-alert-description))
 
-(defvar notmuch-alert-visit-quit-when-pressed-twice t
-  "Quit `notmuch-alert-visit' when the key it is bound to is pressed again.")
 
 (defun notmuch-alert-get-minibuffer-map ()
   "Get the minibuffer map which will be used by `completing-read'.
