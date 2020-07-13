@@ -1,9 +1,9 @@
 ;;; notmuch-alert.el --- Use notmuch bookmarks as alerts  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019
+;; Copyright (C) 2019-2020
 
 ;; Author:  <joerg@joergvolbers.de>
-;; Package-Requires: ((seq "2.20") (emacs "26.1") (notmuch "0.1"))
+;; Package-Requires: ((seq "2.20") (emacs "26.1") (notmuch "0.1") (notmuch-bookmarks))
 ;; Version: 0.1
 ;; Keywords: mail
 ;; URL: https://github.com/publicimageltd/notmuch-alerts
@@ -211,10 +211,18 @@ Return the selected data item (not its string representation)."
 		      :description "Check for mails from today"
 		      :format-string "%d mails from today"))
 
+(defun notmuch-alert-custom-tags ()
+  "Create a new alert object with undefined custom tags."
+  (make-notmuch-alert :filter nil
+		      :type 'custom
+		      :description "Create an alert"
+		      :format-string nil))
+
 (defvar notmuch-alerts
   '(notmuch-alert-unread
     notmuch-alert-any
-    notmuch-alert-today)
+    notmuch-alert-today
+    notmuch-alert-custom-tags)
   "List of alerts offered by `notmuch-alert-install'.
 
 Each element is a function name. The function returns an
@@ -566,6 +574,7 @@ ALERTS is a list of alerts."
   (notmuch-alert--complete prompt alerts
 	     :string-fn #'notmuch-alert-description))
 
+(defun notmuch-alert-description-or-interactive ())
 
 (defun notmuch-alert-get-minibuffer-map ()
   "Get the minibuffer map which will be used by `completing-read'.
@@ -623,6 +632,12 @@ alert."
 	       (user-error "Current buffer's bookmark has no alert")
 	     ,@body))))))
 
+(defun notmuch-alert-strip-tag-prefix (s)
+  "Strip prefix + or - from S."
+  (if (string-match (rx string-start (group (one-or-more (or "+" "-")))) s)
+      (substring s (match-end 1))
+    s))
+
 ;;;###autoload
 (defun notmuch-alert-install ()
   "Install an alert for the current buffer.
@@ -633,12 +648,30 @@ The available alerts are defined by `notmuch-alerts'."
 	(user-error "Current buffer is not bookmarked")
       (let* ((alert (notmuch-alert-select-one
 		     "Set alert for current buffer:"
-		     ;; always create new objects:
 		     (seq-map #'funcall notmuch-alerts))))
 	(if (null alert)
 	    (user-error "Canceled")
+	  ;;
+	  ;; Special handling for custom alerts:
+	  ;;
+	  (when (eq (notmuch-alert-type alert) 'custom)
+	    (let* ((taglist (seq-map #'notmuch-alert-strip-tag-prefix
+				     (notmuch-read-tag-changes nil "Enter tags to match the filter query (+ and - will be ignored):\n"))))
+	      (if (null taglist)
+		  (user-error "Canceled.")
+		(let* ((filter-query  (string-join (seq-map (lambda (s) (concat "tag:" s)) taglist)
+						   " AND "))
+		       (description   (format "Custom alert matching '%s'" filter-query))
+		       (format-string (read-from-minibuffer (format "Filter query: %s.\nEnter format string for this alert (%%d=# of matches):"
+								    filter-query))))
+		  (if (string-empty-p format-string)
+		      (user-error "No format string; canceled")
+		    (setf (notmuch-alert-description alert) description)
+		    (setf (notmuch-alert-format-string alert) format-string)
+		    (setf (notmuch-alert-filter alert) filter-query))))))
+	  ;;
 	  (notmuch-alert-set bm alert)
-	  (message "Set alert '%s'"
+	  (message "Current buffer's bookmark alert: '%s'"
 		   (notmuch-alert-description alert)))))))
 
 ;;;###autoload
