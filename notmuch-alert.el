@@ -3,8 +3,7 @@
 ;; Copyright (C) 2019-2020
 
 ;; Author:  <joerg@joergvolbers.de>
-;; Package-Requires: ((seq "2.20") (emacs "26.1") (notmuch "0.1")
-;; (notmuch-bookmarks "0.1"))
+;; Package-Requires: ((seq "2.20") (emacs "26.1") (notmuch "0.1") (notmuch-bookmarks "0.1"))
 ;; Version: 0.1
 ;; Keywords: mail
 ;; URL: https://github.com/publicimageltd/notmuch-alerts
