@@ -3,7 +3,8 @@
 ;; Copyright (C) 2019-2020
 
 ;; Author:  <joerg@joergvolbers.de>
-;; Package-Requires: ((seq "2.20") (emacs "26.1") (notmuch "0.1") (notmuch-bookmarks))
+;; Package-Requires: ((seq "2.20") (emacs "26.1") (notmuch "0.1")
+;; (notmuch-bookmarks "0.1"))
 ;; Version: 0.1
 ;; Keywords: mail
 ;; URL: https://github.com/publicimageltd/notmuch-alerts
@@ -50,6 +51,13 @@
 (require 'cl-lib)
 (require 'subr-x)
 (require 'rx)
+
+;;; * Compatibility stuff
+
+(defalias 'notmuch-alert-seq-contains-p
+  (if (fboundp 'seq-contains-p)
+      'seq-contains-p
+    'seq-contains))
 
 ;;; * Global Variables
 
@@ -285,7 +293,10 @@ Returns the installed alert or nil if someting went wrong."
 	 (record (second bookmark)))
     (cons name
 	  (list
-	   (seq-filter (lambda (keyval) (not (seq-contains keys (car keyval)))) record)))))
+	   (seq-filter
+	    (lambda (keyval)
+	      (not (notmuch-alert-seq-contains-p keys (car keyval))))
+	    record)))))
 
 (defun notmuch-alert-remove-alert (bookmark)
   "Remove BOOKMARK's alert object."
