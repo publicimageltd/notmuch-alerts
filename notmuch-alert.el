@@ -239,7 +239,8 @@ alert object.")
 
 (defun notmuch-alert-maybe-save-bookmark-alist ()
   "Increase bookmark modification counter and possibly save the bookmark alist."
-  (incf bookmark-alist-modification-count)
+  (setq bookmark-alist-modification-count
+	(+ 1 bookmark-alist-modification-count))
   (when (bookmark-time-to-save-p)
     (bookmark-save)))
 
