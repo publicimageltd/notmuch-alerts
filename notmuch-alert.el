@@ -150,16 +150,18 @@ Return the selected data item (not its string representation)."
        (let* (;; create a-collection:
 	      (string-list (mapcar (apply-partially #'notmuch-alert--format string-fn) collection))
 	      (data-list   (mapcar data-fn collection))
-	      (a-collection (seq-mapn #'notmuch-alert--propertize
-				      string-list
-				      data-list))
+	      (a-collection (seq-mapn #'cons string-list data-list))
+	      ;; (a-collection (seq-mapn #'notmuch-alert--propertize
+	      ;; 			      string-list
+	      ;; 			      data-list))
 	      ;; let the user select:
 	      (result   (completing-read prompt
 					 a-collection
 					 nil
 					 require-match))
-	      ;; extract the data from the text property:
-	      (result-data (get-text-property 0 'data result)))
+	      ;; ;; extract the data from the text property:
+	      ;; (result-data (get-text-property 0 'data result)))
+	      (result-data (alist-get result a-collection nil nil #'string=)))
 	 (if (or require-match result-data)
 	     result-data
 	   result)))
