@@ -152,7 +152,7 @@ Return the selected data item (not its string representation)."
 	      (data-list   (mapcar data-fn collection))
 	      (a-collection (seq-mapn #'cons string-list data-list))
 	      ;; doesn't hurt if selectrum is not installed, does it?
-	      (selectrum-should-sort-p nil)
+	      (selectrum-should-sort nil)
 	      ;; let the user select:
 	      (result   (completing-read prompt
 					 a-collection
