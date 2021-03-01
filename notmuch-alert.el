@@ -1,6 +1,6 @@
 ;;; notmuch-alert.el --- Use notmuch bookmarks as alerts  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2020
+;; Copyright (C) 2019-2021
 
 ;; Author:  <joerg@joergvolbers.de>
 ;; Package-Requires: ((seq "2.20") (emacs "26.1") (notmuch "0.1") (notmuch-bookmarks "0.1"))
@@ -135,7 +135,7 @@ arguments S and further ARGS."
 					  &key (string-fn "%s")
 					  (data-fn #'identity)
 					  (require-match t))
-       "Offer completion on COLLECTION.
+  "Offer completion on COLLECTION.
 
 COLLECTION is a data list. It is mapped to STRING-FN to create
 choices for the user. 
