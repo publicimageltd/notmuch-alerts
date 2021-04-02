@@ -58,6 +58,13 @@
       'seq-contains-p
     'seq-contains))
 
+;; Silence Byte Compiler
+
+(defvar selectrum-should-sort)
+(defvar ivy-minibuffer-map)
+(defvar ivy-mode)
+(defvar ivy-sort-functions-alist)
+
 ;;; * Global Variables
 
 (defcustom notmuch-alert-bmenu-filter-key "A"
@@ -289,8 +296,8 @@ Returns the installed alert or nil if someting went wrong."
 
 (defun notmuch-alert-filter-record (bookmark keys)
   "Return BOOKMARK without the slots named by KEYS."
-  (let* ((name   (first bookmark))
-	 (record (second bookmark)))
+  (let* ((name   (cl-first bookmark))
+	 (record (cl-second bookmark)))
     (cons name
 	  (list
 	   (seq-filter
@@ -371,18 +378,22 @@ defined. This correction can be turned of by setting NO-CORRECTION."
 
 (defface notmuch-alert-state-bookmark
   '((t . (:inherit font-lock-builtin-face)))
-  "Face for the status string 'BOOKMARK'.")
+  "Face for the status string 'BOOKMARK'."
+  :group 'notmuch-alert)
 
 (defface notmuch-alert-state-active-alert
   '((t . (:foreground "green" :weight bold)))
-  "Face for the status string 'ACTIVE'.")
+  "Face for the status string 'ACTIVE'."
+  :group 'notmuch-alert)
 
 (defface notmuch-alert-state-inactive-alert
   '((t . (:foreground "dimgrey" :weight bold)))
-  "Face for the status string 'INACTIVE'.")
+  "Face for the status string 'INACTIVE'."
+  :group 'notmuch-alert)
 
 (defun notmuch-alert-pprinter--state (bookmark alert)
   "Pretty print BOOKMARK: Return status of ALERT as a string."
+  (ignore bookmark)
   (if (not alert)
       (propertize "BOOKMARK" 'face 'notmuch-alert-state-bookmark)
     (if (notmuch-alert-status alert)
@@ -400,6 +411,7 @@ the notmuch database directly."
 
 (defun notmuch-alert-pprinter--alert-info (bookmark alert)
   "Pretty print BOOKMARK: Return information on its ALERT."
+  (ignore bookmark)
   (when alert
     ;; TODO Durch eigene Berechnung der Anzeige ersetzen,
     ;; dann auch mit propertized string (...-active-state)
@@ -409,10 +421,12 @@ the notmuch database directly."
 (defun notmuch-alert-pprinter--bm-name (bookmark alert)
   "Pretty print BOOKMARK: Return BOOKMARK's name.
 ALERT is ignored."
+  (ignore alert)
   (bookmark-name-from-full-record bookmark))
 
 (defun notmuch-alert-pprinter--bm-tare (bookmark alert)
   "Pretty print BOOKMARK: Return tare of ALERT."
+  (ignore alert)
   (when-let* ((tare (notmuch-alert-get-tare bookmark)))
     (unless (<= tare 0)
       (format "Tare set to %d." tare))))
@@ -492,7 +506,7 @@ Prepend the string PREFIX if it is not nil."
 
 (defun notmuch-alert-set-buffer-name-if-unique (buffer name)
   "Set BUFFER's name to NAME if it is not already used by some other buffer."
-  (unless (seq-contains (seq-map #'buffer-name (buffer-list)) name #'string-equal)
+  (unless (notmuch-alert-seq-contains-p (seq-map #'buffer-name (buffer-list)) name #'string-equal)
     (with-current-buffer buffer
       (rename-buffer name))))
 
@@ -636,13 +650,13 @@ Throw an error if the current buffer is not bookmarked or has no
 alert."
   (declare (indent 2)
 	   (debug (symbolp symbolp &rest form)))
-  (let* ((_bm     (intern (symbol-name bookmark-symbol)))
-	 (_alert  (intern (symbol-name alert-symbol))))
-    `(let* ((,_bm (notmuch-bookmarks-get-buffer-bookmark)))
-       (if (null ,_bm)
+  (let* ((bm-sym     (intern (symbol-name bookmark-symbol)))
+	 (alert-sym  (intern (symbol-name alert-symbol))))
+    `(let* ((,bm-sym (notmuch-bookmarks-get-buffer-bookmark)))
+       (if (null ,bm-sym)
 	   (user-error "Current buffer is not bookmarked")
-	 (let* ((,_alert (notmuch-alert-get ,_bm)))
-	   (if (null ,_alert)
+	 (let* ((,alert-sym (notmuch-alert-get ,bm-sym)))
+	   (if (null ,alert-sym)
 	       (user-error "Current buffer's bookmark has no alert")
 	     ,@body))))))
 
@@ -713,9 +727,7 @@ display it. With prefix JUSt-DISPLAY set to '(16), remove the
 tare."
   (interactive "P")
   (notmuch-alert-with-current-buffer bm alert
-    (let* ((count      (or (notmuch-alert-count alert)
-		 	    (notmuch-alert-update bm)))
-	   (tara       (notmuch-alert-get-tare bm)))
+    (let* ((tara       (notmuch-alert-get-tare bm)))
       (cl-case (car just-display)
 	(16   (progn
 		(notmuch-alert-set-tare bm 0)
