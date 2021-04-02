@@ -590,7 +590,10 @@ ALERTS is a list of alerts."
 (defun notmuch-alert-get-minibuffer-map ()
   "Get the minibuffer map which will be used by `completing-read'.
 Change this function to add completion backends."
-  (if ivy-mode ivy-minibuffer-map minibuffer-local-map))
+  (if (and (featurep 'ivy)
+	   ivy-mode)
+      ivy-minibuffer-map
+    minibuffer-local-map))
 
 ;;;###autoload
 (defun notmuch-alert-visit ()
