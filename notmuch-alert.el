@@ -475,7 +475,7 @@ SCHEME is a list of cells, each defining a new column (see
 Returns a string."
   (string-join
    (seq-map (lambda (scheme-spec)
-	      (notmuch-alert-pp-column bookmark (first scheme-spec) (second scheme-spec)))
+	      (notmuch-alert-pp-column bookmark (cl-first scheme-spec) (cl-second scheme-spec)))
 	    scheme)))
 
 
