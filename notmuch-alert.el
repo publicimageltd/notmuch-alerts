@@ -133,19 +133,27 @@ properties.")
 If STRING-FN is a format string, pass it to `format' with
 arguments S and further ARGS."
   (let* ((fn (cond
-	      ((functionp string-fn) string-fn)
-	      ((stringp   string-fn) (apply-partially #'format string-fn))
-	      (t                     #'identity))))
+              ((functionp string-fn) string-fn)
+              ((stringp   string-fn) (apply-partially #'format string-fn))
+              (t                     #'identity))))
     (apply fn s args)))
 
+(defun notmuch-alert--nofrillsalert (bookmark)
+  "Return bookmark name with alert added."
+  (let ((alert (notmuch-alert-get bookmark)))
+    (concat
+     (notmuch-alert-pprinter--count bookmark alert)
+     " "
+     (bookmark-name-from-full-record bookmark))))
+
 (cl-defun notmuch-alert--complete (prompt collection
-					  &key (string-fn "%s")
-					  (data-fn #'identity)
-					  (require-match t))
+                                          &key (string-fn "%s")
+                                          (data-fn #'identity)
+                                          (require-match t))
   "Offer completion on COLLECTION.
 
 COLLECTION is a data list. It is mapped to STRING-FN to create
-choices for the user. 
+choices for the user.
 
  If STRING-FN is a string, it is used as a format string with the
 item as its single argument.
@@ -154,21 +162,23 @@ DATA-FN maps a data item to each item of the collection.
 
 Return the selected data item (not its string representation)."
   (let* (;; create a-collection:
-	 (string-list (mapcar (apply-partially #'notmuch-alert--format string-fn) collection))
-	 (data-list   (mapcar data-fn collection))
-	 (a-collection (seq-mapn #'cons string-list data-list))
-	 ;; doesn't hurt if selectrum is not installed, does it?
-	 (selectrum-should-sort nil)
-	 ;; let the user select:
-	 (result   (completing-read prompt
-				    a-collection
-				    nil
-				    require-match))
-	 ;; ;; extract the data from the text property:
-	 ;; (result-data (get-text-property 0 'data result)))
-	 (result-data (alist-get result a-collection nil nil #'string=)))
+;;         (string-list (mapcar (apply-partially
+         ;;         #'notmuch-alert--format string-fn) collection))
+         (string-list (mapcar #'bookmark-name-from-full-record collection))
+         (data-list   (mapcar data-fn collection))
+         (a-collection (seq-mapn #'cons string-list data-list))
+         ;; doesn't hurt if selectrum is not installed, does it?
+         (selectrum-should-sort nil)
+         ;; let the user select:
+         (result   (completing-read prompt
+                                    a-collection
+                                    nil
+                                    require-match))
+         ;; ;; extract the data from the text property:
+         ;; (result-data (get-text-property 0 'data result)))
+         (result-data (alist-get result a-collection nil nil #'string=)))
     (if (or require-match result-data)
-	result-data
+        result-data
       result)))
 
 ;;; * Alert Object
@@ -193,7 +203,7 @@ Return the selected data item (not its string representation)."
   filter
   (operator #'notmuch-alert-count>0-p)
   ;; Offer standardized information:
-  type                ;; symbol for the type class; not used yet 
+  type                ;; symbol for the type class; not used yet
   description         ;; Description for status string
   format-string)      ;; String passed to format with one string argument (i.e. '%s uncount mails')
 
@@ -208,29 +218,29 @@ Return the selected data item (not its string representation)."
 (defun notmuch-alert-unread ()
   "Create a new 'unread mails' alert object."
   (make-notmuch-alert :filter "tag:unread"
-		      :type  'unread
-		      :description "Check for unread mails"
-		      :format-string "%d unread mails"))
+                      :type  'unread
+                      :description "Check for unread mails"
+                      :format-string "%d unread mails"))
 
 (defun notmuch-alert-any ()
   "Create a new 'any mails' alert object."
   (make-notmuch-alert :type  'any
-		      :description "Check for any mails"
-		      :format-string "%d mails"))
+                      :description "Check for any mails"
+                      :format-string "%d mails"))
 
 (defun notmuch-alert-today ()
   "Create a new 'mails today' alert object."
   (make-notmuch-alert :filter "date:today"
-		      :type 'today
-		      :description "Check for mails from today"
-		      :format-string "%d mails from today"))
+                      :type 'today
+                      :description "Check for mails from today"
+                      :format-string "%d mails from today"))
 
 (defun notmuch-alert-custom-tags ()
   "Create a new alert object with undefined custom tags."
   (make-notmuch-alert :filter nil
-		      :type 'custom
-		      :description "Create an alert"
-		      :format-string nil))
+                      :type 'custom
+                      :description "Create an alert"
+                      :format-string nil))
 
 (defvar notmuch-alerts
   '(notmuch-alert-unread
@@ -247,7 +257,7 @@ alert object.")
 (defun notmuch-alert-maybe-save-bookmark-alist ()
   "Increase bookmark modification counter and possibly save the bookmark alist."
   (setq bookmark-alist-modification-count
-	(+ 1 bookmark-alist-modification-count))
+        (+ 1 bookmark-alist-modification-count))
   (when (bookmark-time-to-save-p)
     (bookmark-save)))
 
@@ -286,24 +296,24 @@ Returns the installed alert or nil if someting went wrong."
   "Check if BOOKMARK has an active alert object."
   (and (notmuch-bookmarks-record-p bookmark)
        (when-let* ((alert (notmuch-alert-get bookmark)))
-	 (notmuch-alert-status alert))))
+         (notmuch-alert-status alert))))
 
 (defun notmuch-alert-bm-has-inactive-alert-p (bookmark)
   "True if BOOKMARK as an inactive alert."
   (and (notmuch-bookmarks-record-p bookmark)
        (when-let* ((alert (notmuch-alert-get bookmark)))
-	 (not (notmuch-alert-status alert)))))
+         (not (notmuch-alert-status alert)))))
 
 (defun notmuch-alert-filter-record (bookmark keys)
   "Return BOOKMARK without the slots named by KEYS."
   (let* ((name   (cl-first bookmark))
-	 (record (cl-second bookmark)))
+         (record (cl-second bookmark)))
     (cons name
-	  (list
-	   (seq-filter
-	    (lambda (keyval)
-	      (not (notmuch-alert-seq-contains-p keys (car keyval))))
-	    record)))))
+          (list
+           (seq-filter
+            (lambda (keyval)
+              (not (notmuch-alert-seq-contains-p keys (car keyval))))
+            record)))))
 
 (defun notmuch-alert-remove-alert (bookmark)
   "Remove BOOKMARK's alert object."
@@ -343,30 +353,30 @@ Returns the installed alert or nil if someting went wrong."
   "Count the number of mails matching QUERY."
   (string-to-number
    (notmuch-command-to-string "count" query)))
-  
+
 (defun notmuch-alert-do-count (bookmark &optional filter no-correction)
   "Count the mails matched by BOOKMARK and an additional extra FILTER.
 Correct the count according to the tara value of bookmark, if
 defined. This correction can be turned of by setting NO-CORRECTION."
   (let* ((last-count (bookmark-prop-get bookmark 'tara))
-	 (query      (notmuch-alert-full-query bookmark filter))
-	 (count      (notmuch-alert-notmuch-count query)))
+         (query      (notmuch-alert-full-query bookmark filter))
+         (count      (notmuch-alert-notmuch-count query)))
     (if no-correction
-	count
+        count
     (max (- count (or last-count 0)) 0))))
 
 (defun notmuch-alert-update (bookmark)
   "Update the alert of BOOKMARK and return its updated status."
   (if-let* ((alert (notmuch-alert-get bookmark)))
       (let* ((query   (notmuch-alert-filter alert))
-	     (count   (notmuch-alert-do-count bookmark query))
-	     (fn      (notmuch-alert-operator alert))
-	     (status  (funcall fn count)))
-	(setf (notmuch-alert-count alert)  count)
-	(setf (notmuch-alert-status alert) status)
-	status)
+             (count   (notmuch-alert-do-count bookmark query))
+             (fn      (notmuch-alert-operator alert))
+             (status  (funcall fn count)))
+        (setf (notmuch-alert-count alert)  count)
+        (setf (notmuch-alert-status alert) status)
+        status)
     (user-error "No alert defined for bookmark '%s'"
-		(bookmark-name-from-full-record bookmark))))
+                (bookmark-name-from-full-record bookmark))))
 
 (defun notmuch-alert-update-all ()
   "Update all alerts and return all bookmarks with active alerts."
@@ -397,7 +407,7 @@ defined. This correction can be turned of by setting NO-CORRECTION."
   (if (not alert)
       (propertize "BOOKMARK" 'face 'notmuch-alert-state-bookmark)
     (if (notmuch-alert-status alert)
-	(propertize "ACTIVE" 'face 'notmuch-alert-state-active-alert)
+        (propertize "ACTIVE" 'face 'notmuch-alert-state-active-alert)
       (propertize "INACTIVE" 'face 'notmuch-alert-state-inactive-alert))))
 
 (defun notmuch-alert-pprinter--count (bookmark alert)
@@ -405,8 +415,8 @@ defined. This correction can be turned of by setting NO-CORRECTION."
 If an alert exists, just display its current count, else query
 the notmuch database directly."
   (let* ((count (if alert
-		    (notmuch-alert-count alert)
-		  (notmuch-alert-notmuch-count (notmuch-bookmarks-query bookmark)))))
+                    (notmuch-alert-count alert)
+                  (notmuch-alert-notmuch-count (notmuch-bookmarks-query bookmark)))))
     (concat "(" (notmuch-hello-nice-number count) ")")))
 
 (defun notmuch-alert-pprinter--alert-info (bookmark alert)
@@ -416,7 +426,7 @@ the notmuch database directly."
     ;; TODO Durch eigene Berechnung der Anzeige ersetzen,
     ;; dann auch mit propertized string (...-active-state)
     (notmuch-alert-status-string alert
-				 (notmuch-alert-description alert))))
+                                 (notmuch-alert-description alert))))
 
 (defun notmuch-alert-pprinter--bm-name (bookmark alert)
   "Pretty print BOOKMARK: Return BOOKMARK's name.
@@ -449,23 +459,23 @@ following:
  (:face (facespec))      ;; print string with this face
  (:concat-if \"string\") ;; if return value is nonempty, add \"string\""
   (let* ((alert (notmuch-alert-get bookmark))
-	 (s     (if (stringp pprinter) pprinter
-		  (funcall pprinter bookmark alert))))
+         (s     (if (stringp pprinter) pprinter
+                  (funcall pprinter bookmark alert))))
     (if (null mods)
-	s
+        s
       ;; mod 'concat-if':
       (when-let* ((concat-if (plist-get mods :concat-if)))
-	(when s
-	  (setq s (concat s concat-if))))
+        (when s
+          (setq s (concat s concat-if))))
       ;; mod 'width':
       (when-let* ((width (plist-get mods :width)))
-	(let* ((pad (- width (string-width s))))
-	  (if (<= pad 0)
-	      (setq s (substring s 0 width))
-	    (setq s (concat s (make-string pad ?\s))))))
+        (let* ((pad (- width (string-width s))))
+          (if (<= pad 0)
+              (setq s (substring s 0 width))
+            (setq s (concat s (make-string pad ?\s))))))
       ;; mod 'face':
       (when-let* ((face-specs (plist-get mods :face)))
-	(setq s (funcall #'propertize s 'face face-specs))))
+        (setq s (funcall #'propertize s 'face face-specs))))
     s))
 
 (defun notmuch-alert-pp-line (scheme bookmark)
@@ -475,8 +485,8 @@ SCHEME is a list of cells, each defining a new column (see
 Returns a string."
   (string-join
    (seq-map (lambda (scheme-spec)
-	      (notmuch-alert-pp-column bookmark (cl-first scheme-spec) (cl-second scheme-spec)))
-	    scheme)))
+              (notmuch-alert-pp-column bookmark (cl-first scheme-spec) (cl-second scheme-spec)))
+            scheme)))
 
 
 ;;; * Information on alerts
@@ -487,22 +497,22 @@ If alert is not active, return INACTIVE-STRING.
 Prepend the string PREFIX if it is not nil."
   (if (notmuch-alert-status alert)
       (format (concat prefix (notmuch-alert-format-string alert))
-	      (notmuch-alert-count alert))
+              (notmuch-alert-count alert))
     inactive-string))
 
 (defun notmuch-alert-display-info (bookmark alert)
   "Display information about BOOKMARK's ALERT in the echo area."
   (let* ((status (notmuch-alert-status alert))
-	 (tare   (or (notmuch-alert-get-tare bookmark) 0)))
+         (tare   (or (notmuch-alert-get-tare bookmark) 0)))
     (message
      (concat "Alert"
-	     " '" (or (notmuch-alert-description alert) "no description") "' "
-	     "is " (if status "ACTIVE" "INACTIVE")
-	     ". "
-	     (notmuch-alert-status-string alert nil "Counted ")
-	     (when (> tare 0)
-	       (format " (ignoring %s mails as tare)" tare))
-	     "."))))
+             " '" (or (notmuch-alert-description alert) "no description") "' "
+             "is " (if status "ACTIVE" "INACTIVE")
+             ". "
+             (notmuch-alert-status-string alert nil "Counted ")
+             (when (> tare 0)
+               (format " (ignoring %s mails as tare)" tare))
+             "."))))
 
 (defun notmuch-alert-set-buffer-name-if-unique (buffer name)
   "Set BUFFER's name to NAME if it is not already used by some other buffer."
@@ -518,15 +528,15 @@ Prepend the string PREFIX if it is not nil."
   ;; its name. Refreshing the buffer finds the buffer (!) via that
   ;; function.
   (when (and notmuch-alert-change-buffer-titles
-	     (eq major-mode 'notmuch-show-mode))
+             (eq major-mode 'notmuch-show-mode))
     (let* ((from (notmuch-show-get-from))
-	   (subject (notmuch-show-get-subject))
-	   (new-name (format "%s: %s" from subject)))
+           (subject (notmuch-show-get-subject))
+           (new-name (format "%s: %s" from subject)))
       (notmuch-alert-set-buffer-name-if-unique (current-buffer) new-name))))
 
 ;;; * Easy setting of tags to include or exclude mails from an alert:
 
-(defvar notmuch-alert-single-tag-regexp 
+(defvar notmuch-alert-single-tag-regexp
   (rx (: (or "is" "tag") ":" (group (one-or-more (not space)))))
   "Regexp matching a simple notmuch tag search term.")
 
@@ -552,12 +562,12 @@ expression syntactically.")
   (if (null rest-query)
       acc
     (if (string-match notmuch-alert-single-tag-regexp rest-query)
-	(let* ((end (match-end 1))
-	       (sub (match-string 1 rest-query)))
-	  (notmuch-alert--do-reduce-query
-	   (append (or acc) (list sub))
-	   (unless (= end (length rest-query))
-	     (substring rest-query end))))
+        (let* ((end (match-end 1))
+               (sub (match-string 1 rest-query)))
+          (notmuch-alert--do-reduce-query
+           (append (or acc) (list sub))
+           (unless (= end (length rest-query))
+             (substring rest-query end))))
       acc)))
 
 ;;;###autoload
@@ -566,15 +576,15 @@ expression syntactically.")
 If SET is non-nil, set the tags."
   (interactive "P")
   (let* ((alert        (or (notmuch-alert-get-via-buffer)
-			   (user-error "No alert associated with the current buffer")))
-	 (taglist      (or (notmuch-alert-query-to-taglist (notmuch-alert-filter alert))
-			   (user-error "No tags defined in current alert's filter query")))
-	 (tag-changes  (seq-map (lambda (s) (concat (if set "+" "-") s))
-				taglist))
-	 (tag-fn  (cl-case major-mode
-		    ('notmuch-search-mode #'notmuch-search-tag)
-		    ('notmuch-tree-mode   #'notmuch-tree-tag)
-		    ('notmuch-show-mode   #'notmuch-show-tag))))
+                           (user-error "No alert associated with the current buffer")))
+         (taglist      (or (notmuch-alert-query-to-taglist (notmuch-alert-filter alert))
+                           (user-error "No tags defined in current alert's filter query")))
+         (tag-changes  (seq-map (lambda (s) (concat (if set "+" "-") s))
+                                taglist))
+         (tag-fn  (cl-case major-mode
+                    ('notmuch-search-mode #'notmuch-search-tag)
+                    ('notmuch-tree-mode   #'notmuch-tree-tag)
+                    ('notmuch-show-mode   #'notmuch-show-tag))))
     (funcall tag-fn tag-changes)))
 
 ;;; * Interactive Functions
@@ -582,9 +592,9 @@ If SET is non-nil, set the tags."
 (defun notmuch-alert-display-info-via-buffer (&optional buf)
   "Display information about BUF's alert in the echo area."
   (let* ((alert (notmuch-alert-get-via-buffer buf))
-	 (bm    (notmuch-bookmarks-get-buffer-bookmark buf)))
+         (bm    (notmuch-bookmarks-get-buffer-bookmark buf)))
     (if alert
-	(notmuch-alert-display-info bm alert)
+        (notmuch-alert-display-info bm alert)
       (user-error "No alert defined"))))
 
 ;;;###autoload
@@ -597,7 +607,7 @@ If SET is non-nil, set the tags."
   "PROMPT the user to choose between ALERTS.
 ALERTS is a list of alerts."
   (notmuch-alert--complete prompt alerts
-	     :string-fn #'notmuch-alert-description))
+             :string-fn #'notmuch-alert-description))
 
 (defun notmuch-alert-description-or-interactive ())
 
@@ -605,7 +615,7 @@ ALERTS is a list of alerts."
   "Get the minibuffer map which will be used by `completing-read'.
 Change this function to add completion backends."
   (if (and (featurep 'ivy)
-	   ivy-mode)
+           ivy-mode)
       ivy-minibuffer-map
     minibuffer-local-map))
 
@@ -614,7 +624,7 @@ Change this function to add completion backends."
   "Jump to one of the bookmarks with an alert."
   (interactive)
   (let* (result backup
-	 (keys   (this-command-keys)))
+         (keys   (this-command-keys)))
     (when notmuch-alert-visit-quit-when-pressed-twice
       ;;  modify map so that a repetition of the calling key sequence cancels the selection:
       (setq backup (lookup-key (notmuch-alert-get-minibuffer-map) keys))
@@ -623,20 +633,22 @@ Change this function to add completion backends."
     (notmuch-alert-update-all)
     ;; offer selection:
     (unwind-protect
-	(let* ((collection (append
-			    (seq-filter #'notmuch-alert-bm-has-active-alert-p bookmark-alist)
-			    (seq-filter #'notmuch-alert-bm-has-inactive-alert-p bookmark-alist)
-			    (seq-filter #'notmuch-alert-bm-has-no-alert-p bookmark-alist))))
-	  (setq result (notmuch-alert--complete "Select bookmark: "
-			 collection
-			 :string-fn (apply-partially #'notmuch-alert-pp-line notmuch-alert-bm-prettyprint-scheme))))
+        (let* ((collection (append
+                            (seq-filter #'notmuch-alert-bm-has-active-alert-p bookmark-alist)
+                            ;;(seq-filter #'notmuch-alert-bm-has-inactive-alert-p bookmark-alist)
+                            ;;(seq-filter #'notmuch-alert-bm-has-no-alert-p bookmark-alist))
+                            )))
+          (setq result (notmuch-alert--complete "Select bookmark: "
+                                                collection
+                                                :string-fn
+                                                (apply-partially #'notmuch-alert-pp-line notmuch-alert-bm-prettyprint-scheme))))
       ;; repair keymap in cleanup form, irrespective of result:
       (when notmuch-alert-visit-quit-when-pressed-twice
-	(define-key (notmuch-alert-get-minibuffer-map) keys backup))
+        (define-key (notmuch-alert-get-minibuffer-map) keys backup))
       ;; also respond to selection in an already cleaned up environment:
-      (when result
-	(push-mark)
-	(bookmark-jump result)))))
+      (when :result
+        (push-mark)
+        (bookmark-jump result)))))
 
 ;; Useful macro for accessing an alert indirectly, via the current
 ;; buffer:
@@ -649,16 +661,16 @@ and ALERT-SYMBOL.
 Throw an error if the current buffer is not bookmarked or has no
 alert."
   (declare (indent 2)
-	   (debug (symbolp symbolp &rest form)))
+           (debug (symbolp symbolp &rest form)))
   (let* ((bm-sym     (intern (symbol-name bookmark-symbol)))
-	 (alert-sym  (intern (symbol-name alert-symbol))))
+         (alert-sym  (intern (symbol-name alert-symbol))))
     `(let* ((,bm-sym (notmuch-bookmarks-get-buffer-bookmark)))
        (if (null ,bm-sym)
-	   (user-error "Current buffer is not bookmarked")
-	 (let* ((,alert-sym (notmuch-alert-get ,bm-sym)))
-	   (if (null ,alert-sym)
-	       (user-error "Current buffer's bookmark has no alert")
-	     ,@body))))))
+           (user-error "Current buffer is not bookmarked")
+         (let* ((,alert-sym (notmuch-alert-get ,bm-sym)))
+           (if (null ,alert-sym)
+               (user-error "Current buffer's bookmark has no alert")
+             ,@body))))))
 
 (defun notmuch-alert-strip-tag-prefix (s)
   "Strip prefix + or - from S."
@@ -673,34 +685,34 @@ The available alerts are defined by `notmuch-alerts'."
   (interactive)
   (let* ((bm (notmuch-bookmarks-get-buffer-bookmark)))
     (if (null bm)
-	(user-error "Current buffer is not bookmarked")
+        (user-error "Current buffer is not bookmarked")
       (let* ((alert (notmuch-alert-select-one
-		     "Set alert for current buffer:"
-		     (seq-map #'funcall notmuch-alerts))))
-	(if (null alert)
-	    (user-error "Canceled")
-	  ;;
-	  ;; Special handling for custom alerts:
-	  ;;
-	  (when (eq (notmuch-alert-type alert) 'custom)
-	    (let* ((taglist (seq-map #'notmuch-alert-strip-tag-prefix
-				     (notmuch-read-tag-changes nil "Enter tags to match the filter query (+ and - will be ignored):\n"))))
-	      (if (null taglist)
-		  (user-error "Canceled.")
-		(let* ((filter-query  (string-join (seq-map (lambda (s) (concat "tag:" s)) taglist)
-						   " AND "))
-		       (description   (format "Custom alert matching '%s'" filter-query))
-		       (format-string (read-from-minibuffer (format "Filter query: %s.\nEnter format string for this alert (%%d=# of matches):"
-								    filter-query))))
-		  (if (string-empty-p format-string)
-		      (user-error "No format string; canceled")
-		    (setf (notmuch-alert-description alert) description)
-		    (setf (notmuch-alert-format-string alert) format-string)
-		    (setf (notmuch-alert-filter alert) filter-query))))))
-	  ;;
-	  (notmuch-alert-set bm alert)
-	  (message "Current buffer's bookmark alert: '%s'"
-		   (notmuch-alert-description alert)))))))
+                     "Set alert for current buffer:"
+                     (seq-map #'funcall notmuch-alerts))))
+        (if (null alert)
+            (user-error "Canceled")
+          ;;
+          ;; Special handling for custom alerts:
+          ;;
+          (when (eq (notmuch-alert-type alert) 'custom)
+            (let* ((taglist (seq-map #'notmuch-alert-strip-tag-prefix
+                                     (notmuch-read-tag-changes nil "Enter tags to match the filter query (+ and - will be ignored):\n"))))
+              (if (null taglist)
+                  (user-error "Canceled.")
+                (let* ((filter-query  (string-join (seq-map (lambda (s) (concat "tag:" s)) taglist)
+                                                   " AND "))
+                       (description   (format "Custom alert matching '%s'" filter-query))
+                       (format-string (read-from-minibuffer (format "Filter query: %s.\nEnter format string for this alert (%%d=# of matches):"
+                                                                    filter-query))))
+                  (if (string-empty-p format-string)
+                      (user-error "No format string; canceled")
+                    (setf (notmuch-alert-description alert) description)
+                    (setf (notmuch-alert-format-string alert) format-string)
+                    (setf (notmuch-alert-filter alert) filter-query))))))
+          ;;
+          (notmuch-alert-set bm alert)
+          (message "Current buffer's bookmark alert: '%s'"
+                   (notmuch-alert-description alert)))))))
 
 ;;;###autoload
 (defun notmuch-alert-uninstall ()
@@ -716,7 +728,7 @@ The available alerts are defined by `notmuch-alerts'."
   (interactive)
   (notmuch-alert-with-current-buffer bm alert
     (if (notmuch-alert-update bm)
-	(notmuch-alert-display-info bm alert)
+        (notmuch-alert-display-info bm alert)
       (message "Alert inactive"))))
 
 ;;;###autoload
@@ -729,24 +741,24 @@ tare."
   (notmuch-alert-with-current-buffer bm alert
     (let* ((tara       (notmuch-alert-get-tare bm)))
       (cl-case (car just-display)
-	(16   (progn
-		(notmuch-alert-set-tare bm 0)
-		(message "Tare reset to 0.")))
-	(4    (message (if tara
-			   (format "Current tare is %d" tara)
-			 "No tare set")))
-	(t (progn
-	     (notmuch-alert-set-tare bm (notmuch-alert-notmuch-count (notmuch-bookmarks-query bm)))
-	     (message "Tare set to %d" (notmuch-alert-get-tare bm))))))))
+        (16   (progn
+                (notmuch-alert-set-tare bm 0)
+                (message "Tare reset to 0.")))
+        (4    (message (if tara
+                           (format "Current tare is %d" tara)
+                         "No tare set")))
+        (t (progn
+             (notmuch-alert-set-tare bm (notmuch-alert-notmuch-count (notmuch-bookmarks-query bm)))
+             (message "Tare set to %d" (notmuch-alert-get-tare bm))))))))
 
 ;;; Convenience functions
 
 (defun notmuch-alert-remove-all-alerts ()
   "Remove all notmuch alert bookmarks from the bookmark list."
   (setq bookmark-alist
-	(seq-filter
-	 (lambda (bm) (not (notmuch-alert-bm-has-alert-p bm)))
-	 bookmark-alist)))
+        (seq-filter
+         (lambda (bm) (not (notmuch-alert-bm-has-alert-p bm)))
+         bookmark-alist)))
 
 
 ;; Hook into notmuch ecosystem
@@ -760,7 +772,7 @@ This function should not be called directly. Use
   ;; install better buffer names:
   (let* ((hook-fn (if uninstall 'remove-hook 'add-hook)))
     (funcall hook-fn 'notmuch-show-hook
-	     #'notmuch-alert-set-sensible-buffer-name))
+             #'notmuch-alert-set-sensible-buffer-name))
   ;; set up for ivy completions:
   (unless uninstall
     (with-eval-after-load 'ivy
@@ -768,22 +780,22 @@ This function should not be called directly. Use
   ;; edit bmenu keymap:
   (when notmuch-alert-bmenu-filter-key
     (if uninstall
-	(when notmuch-alert-bmenu-original-keymap
-	  (setq bookmark-bmenu-mode-map
-		notmuch-alert-bmenu-original-keymap))
+        (when notmuch-alert-bmenu-original-keymap
+          (setq bookmark-bmenu-mode-map
+                notmuch-alert-bmenu-original-keymap))
       (setq notmuch-alert-bmenu-original-keymap
-	    (copy-keymap bookmark-bmenu-mode-map))
+            (copy-keymap bookmark-bmenu-mode-map))
       (define-key bookmark-bmenu-mode-map
-	notmuch-alert-bmenu-filter-key
-	'notmuch-alert-bmenu))))
+        notmuch-alert-bmenu-filter-key
+        'notmuch-alert-bmenu))))
 
 (defun notmuch-alert-bmenu ()
   "Display bookmark menu only with notmuch alerts."
   (interactive)
   (let* ((bookmark-alist
-	  (seq-filter #'notmuch-alert-bm-has-alert-p bookmark-alist)))
+          (seq-filter #'notmuch-alert-bm-has-alert-p bookmark-alist)))
     (if (called-interactively-p 'interactive)
-	(call-interactively #'bookmark-bmenu-list)
+        (call-interactively #'bookmark-bmenu-list)
       (bookmark-bmenu-list))))
 
 ;;;###autoload
