@@ -570,23 +570,6 @@ expression syntactically.")
              (substring rest-query end))))
       acc)))
 
-;;;###autoload
-(defun notmuch-alert-remove-filter-tags (&optional set)
-  "Remove filter tags from the current mail.
-If SET is non-nil, set the tags."
-  (interactive "P")
-  (let* ((alert        (or (notmuch-alert-get-via-buffer)
-                           (user-error "No alert associated with the current buffer")))
-         (taglist      (or (notmuch-alert-query-to-taglist (notmuch-alert-filter alert))
-                           (user-error "No tags defined in current alert's filter query")))
-         (tag-changes  (seq-map (lambda (s) (concat (if set "+" "-") s))
-                                taglist))
-         (tag-fn  (cl-case major-mode
-                    ('notmuch-search-mode #'notmuch-search-tag)
-                    ('notmuch-tree-mode   #'notmuch-tree-tag)
-                    ('notmuch-show-mode   #'notmuch-show-tag))))
-    (funcall tag-fn tag-changes)))
-
 ;;; * Interactive Functions
 
 (defun notmuch-alert-display-info-via-buffer (&optional buf)

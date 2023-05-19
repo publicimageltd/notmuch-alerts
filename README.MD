@@ -198,7 +198,7 @@ From the standpoint of numbers, the effective mail count is 0, whether
 you count 3 old unread mails or 3 newly arrived unread mails. Thus, do
 not forget to remove the tare.
 
+## Changelog
 
+ - 3/26/2023 - remove function `notmuch-alert-remove-filter-tags`
  
-
-
