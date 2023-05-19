@@ -623,6 +623,7 @@ Change this function to add completion backends."
 (defun notmuch-alert-visit ()
   "Jump to one of the bookmarks with an alert."
   (interactive)
+  (bookmark-maybe-load-default-file)
   (let* (result backup
          (keys   (this-command-keys)))
     (when notmuch-alert-visit-quit-when-pressed-twice
