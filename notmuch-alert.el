@@ -626,7 +626,7 @@ Change this function to add completion backends."
                            (notmuch-alert--complete "Select bookmark: "
                                                     collection
                                                     :string-fn
-                                                    (apply-partially #'notmuch-alert-pp-line notmuch-alert-bm-prettyprint-scheme)))))
+                                                    (apply-partially #'notmuch-alert-pp-line notmuch-alert-bm-prettyprint-scheme))))))
       ;; repair keymap in cleanup form, irrespective of result:
       (when notmuch-alert-visit-quit-when-pressed-twice
         (define-key (notmuch-alert-get-minibuffer-map) keys backup))
@@ -634,7 +634,7 @@ Change this function to add completion backends."
       (if (not result)
           (message "No active alerts")
         (push-mark)
-        (bookmark-jump result)))))
+        (bookmark-jump result))))
 
 ;; Useful macro for accessing an alert indirectly, via the current
 ;; buffer:
