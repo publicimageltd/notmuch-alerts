@@ -622,15 +622,17 @@ Change this function to add completion backends."
                             ;;(seq-filter #'notmuch-alert-bm-has-inactive-alert-p bookmark-alist)
                             ;;(seq-filter #'notmuch-alert-bm-has-no-alert-p bookmark-alist))
                             )))
-          (setq result (notmuch-alert--complete "Select bookmark: "
-                                                collection
-                                                :string-fn
-                                                (apply-partially #'notmuch-alert-pp-line notmuch-alert-bm-prettyprint-scheme))))
+          (setq result (and collection
+                           (notmuch-alert--complete "Select bookmark: "
+                                                    collection
+                                                    :string-fn
+                                                    (apply-partially #'notmuch-alert-pp-line notmuch-alert-bm-prettyprint-scheme)))))
       ;; repair keymap in cleanup form, irrespective of result:
       (when notmuch-alert-visit-quit-when-pressed-twice
         (define-key (notmuch-alert-get-minibuffer-map) keys backup))
       ;; also respond to selection in an already cleaned up environment:
-      (when :result
+      (if (not result)
+          (message "No active alerts")
         (push-mark)
         (bookmark-jump result)))))
 
