@@ -609,14 +609,15 @@ Change this function to add completion backends."
   (bookmark-maybe-load-default-file)
   (let* (result backup
          (keys   (this-command-keys)))
+    ;; backup key binding and modify calling key for 'double use':
     (when notmuch-alert-visit-quit-when-pressed-twice
-      ;;  modify map so that a repetition of the calling key sequence cancels the selection:
       (setq backup (lookup-key (notmuch-alert-get-minibuffer-map) keys))
       (define-key (notmuch-alert-get-minibuffer-map) keys 'minibuffer-keyboard-quit))
     ;; update alert counts:
     (notmuch-alert-update-all)
     ;; offer selection:
     (unwind-protect
+        ;; bodyform - defines return value:
         (let* ((collection (append
                             (seq-filter #'notmuch-alert-bm-has-active-alert-p bookmark-alist)
                             ;;(seq-filter #'notmuch-alert-bm-has-inactive-alert-p bookmark-alist)
@@ -627,10 +628,9 @@ Change this function to add completion backends."
                                                     collection
                                                     :string-fn
                                                     (apply-partially #'notmuch-alert-pp-line notmuch-alert-bm-prettyprint-scheme)))))
-      ;; repair keymap in cleanup form, irrespective of result:
+      ;; unwindform - executed even if bodyform throws an error:
       (when notmuch-alert-visit-quit-when-pressed-twice
         (define-key (notmuch-alert-get-minibuffer-map) keys backup))
-      ;; also respond to selection in an already cleaned up environment:
       (if (not result)
           (message "No active alerts")
         (push-mark)
