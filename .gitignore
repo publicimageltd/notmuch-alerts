@@ -1,3 +1,7 @@
 /konzeptblatt.org
 /notmuch-alert.elc
 /makem.sh
+
+# Added automatically by ‘eldev init’.
+/.eldev
+/Eldev-local
