@@ -15,6 +15,11 @@ Display information on current BOOKMARK's alert.
 
 \(fn BOOKMARK)" t nil)
 
+(autoload 'notmuch-alert-display-status "flycheck_notmuch-alert" "\
+Display status information about current BOOKMARK's alert.
+
+\(fn BOOKMARK)" t nil)
+
 (defvar notmuch-alert-mode nil "\
 Non-nil if Notmuch-Alert mode is enabled.
 See the `notmuch-alert-mode' command
@@ -53,6 +58,11 @@ it is disabled.
 
 (autoload 'notmuch-alert-display-info "notmuch-alert" "\
 Display information on current BOOKMARK's alert.
+
+\(fn BOOKMARK)" t nil)
+
+(autoload 'notmuch-alert-display-status "notmuch-alert" "\
+Display status information about current BOOKMARK's alert.
 
 \(fn BOOKMARK)" t nil)
 
