@@ -38,11 +38,7 @@
 ;; ("inactive alert"), or the number of relevant mails matched
 ;; ("active alert").
 
-;; TODO Alle Prädkate außer >0 raus
-;; TODO "mute count" automatisch einbeziehen (aus lokaler Alist)
-;; TODO Funktion zum universellen "muten" einbauen mit lokaler Var
-;; TODO Funktiion zum Bookmark-spezifischen Löschen des mute counts
-;; TODO Diese Funktion an sinnvolle Orte einbauen:
+;; TODO Mute-lösch Funktion an sinnvolle Orte einbauen:
 ;; TODO - Notmuch refresh (über advise)
 ;; TODO - Irgendwie "notmuch poll" von extern abfangen
 
