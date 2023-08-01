@@ -117,7 +117,7 @@ Also assert that the alert has the right format."
       alert)))
 
 (defun notmuch-alert-set-alert (bookmark-or-name fn)
-  "Set the alert function for BOOKMARK-OR-NAME."
+  "Set FN as the alert function for BOOKMARK-OR-NAME."
   (bookmark-prop-set bookmark-or-name 'alert fn))
 
 (defun notmuch-alert-get-filter (bookmark-or-name)
