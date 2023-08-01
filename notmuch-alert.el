@@ -336,7 +336,7 @@ any properties which are not used by `notmuch-bookmarks' > v0.2."
     ('nil  "No bookmark")
     ((pred (not notmuch-bookmarks-record-p)) "Not bookmarked as a notmuch bookmark")
     ((pred (not notmuch-alert-p)) "No alert associated")
-    ((pred (not notmuch-active-alert-p)) "Alert dormant")
+    ((pred (not notmuch-alert-active-p)) "Alert dormant")
     (_ (format "Bookmark has %d %s"
                (notmuch-alert-get-count bookmark)
                (or (notmuch-alert-get-description bookmark) "mails")))))
