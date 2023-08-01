@@ -10,6 +10,11 @@
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from flycheck_notmuch-alert.el
 
+(autoload 'notmuch-alert-display-info "flycheck_notmuch-alert" "\
+Display information on current BOOKMARK's alert.
+
+\(fn BOOKMARK)" t nil)
+
 (defvar notmuch-alert-mode nil "\
 Non-nil if Notmuch-Alert mode is enabled.
 See the `notmuch-alert-mode' command
@@ -39,12 +44,17 @@ it is disabled.
 
 \(fn &optional ARG)" t nil)
 
-(register-definition-prefixes "flycheck_notmuch-alert" '("notmuch-alert-mode-install"))
+(register-definition-prefixes "flycheck_notmuch-alert" '("notmuch-alert-"))
 
 ;;;***
 
 ;;;### (autoloads nil "notmuch-alert" "notmuch-alert.el" (0 0 0 0))
 ;;; Generated autoloads from notmuch-alert.el
+
+(autoload 'notmuch-alert-display-info "notmuch-alert" "\
+Display information on current BOOKMARK's alert.
+
+\(fn BOOKMARK)" t nil)
 
 (defvar notmuch-alert-mode nil "\
 Non-nil if Notmuch-Alert mode is enabled.
@@ -75,7 +85,7 @@ it is disabled.
 
 \(fn &optional ARG)" t nil)
 
-(register-definition-prefixes "notmuch-alert" '("notmuch-alert-mode-install"))
+(register-definition-prefixes "notmuch-alert" '("notmuch-alert-"))
 
 ;;;***
 
