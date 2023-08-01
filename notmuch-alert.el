@@ -50,6 +50,7 @@
 
 (require 'notmuch-bookmarks)
 (require 'cl-lib)
+(require 'map)
 
 ;;; Poor Man's Memoizing
 
@@ -60,20 +61,6 @@ the alerts.")
 
 (defvar notmuch-alert-mute-counts nil
   "Alist storing all mute counts using the bookmark name as key.")
-
-(defun notmuch-alert--memoized-get (memo-var key)
-  "Get value associated with string KEY in alist MEMO-VAR."
-  (when memo-var
-    (alist-get key memo-var nil nil #'string=)))
-
-(defun notmuch-alert--memoized-set (memo-var key val)
-  "Associate VAL with the string KEY in alist MEMO-VAR."
-  (setf (alist-get key memo-var nil nil #'string=) val))
-
-(defun notmuch-alert--memoized-remove (memo-var key)
-  "Remove string KEY from alist MEMO-VAR."
-  (when memo-var
-    (setq memo-var (assoc-delete-all key memo-var #'string=))))
 
 ;;; Hook alerts into notmuch bookmarks
 
@@ -171,20 +158,22 @@ non-nil value to force a fresh query.
 
 Throw an error if BOOKMARK-OR-NAME has no query."
   (let* ((name (notmuch-alert-bookmark-name bookmark-or-name))
-         (stored-count (notmuch-alert--memoized-get notmuch-alert-counts name)))
+         (stored-count (map-elt notmuch-alert-counts name)))
     (if (and (not force) stored-count)
         stored-count
       (let ((query (notmuch-alert--build-query bookmark-or-name)))
         (unless query
           (user-error "Alert %s has no query" name))
-        (notmuch-alert--memoized-set notmuch-alert-counts name
-                                     (string-to-number
-                                      (notmuch-command-to-string "count" query)))))))
+        (setq notmuch-alert-counts
+              (map-insert
+               notmuch-alert-counts name
+               (string-to-number
+                (notmuch-command-to-string "count" query))))))))
 
 (defun notmuch-alert-get-mute-count (bookmark-or-name)
   "Return mute count for BOOKMARK-OR-NAME."
-  (notmuch-alert--memoized-get notmuch-alert-mute-counts
-                               (notmuch-alert-bookmark-name bookmark-or-name)))
+  (map-elt notmuch-alert-mute-counts
+           (notmuch-alert-bookmark-name bookmark-or-name)))
 
 (defun notmuch-alert-set-mute-count (bookmark-or-name val)
   "Set mute count for BOOKMARK-OR-NAME to the number VAL.
@@ -193,14 +182,17 @@ for VAL."
   (interactive (list (or bookmark-current-bookmark (notmuch-alert-select-bookmark))
                      (read-number "Set mute count for this bookmark: "
                                   (notmuch-alert-get-count bookmark-current-bookmark))))
-  (notmuch-alert--memoized-set notmuch-alert-mute-counts
-                               (notmuch-alert-bookmark-name bookmark-or-name)
-                               val))
+  (setq notmuch-alert-mute-counts
+        (map-insert
+         notmuch-alert-mute-counts
+         (notmuch-alert-bookmark-name bookmark-or-name)
+         val)))
 
 (defun notmuch-alert-remove-mute-count (bookmark-or-name)
   "Remove mute count for BOOKMARK-OR-NAME."
-  (notmuch-alert--memoized-remove notmuch-alert-mute-counts
-                                  (notmuch-alert-bookmark-name bookmark-or-name)))
+  (setq notmuch-alert-mute-counts
+        (map-delete notmuch-alert-mute-counts
+                    (notmuch-alert-bookmark-name bookmark-or-name))))
 
 (defun notmuch-alert-remove-all-mute-counts ()
   "Remove all mute counts."
@@ -262,8 +254,10 @@ Example usages:
   (let ((name (notmuch-alert-bookmark-name bookmark-or-name)))
     (cl-dolist (prop '(alert filter description))
       (notmuch-alert-remove-prop name prop))
-    (notmuch-alert--memoized-remove notmuch-alert-counts name)
-    (notmuch-alert--memoized-remove notmuch-alert-mute-counts name)))
+    (setq notmuch-alert-counts
+          (map-delete notmuch-alert-counts name))
+    (setq notmuch-alert-mute-counts
+          (map-delete notmuch-alert-mute-counts name))))
 
 (defun notmuch-alert-active-p (bookmark-or-name)
   "Return non-nil if BOOKMARK-OR-NAME's alert is active.
