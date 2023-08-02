@@ -6,19 +6,33 @@
                          (or (file-name-directory #$) (car load-path))))
 
 
-;;;### (autoloads nil "flycheck_notmuch-alert" "flycheck_notmuch-alert.el"
+;;;### (autoloads nil "flycheck_notmuch-alert-old" "flycheck_notmuch-alert-old.el"
 ;;;;;;  (0 0 0 0))
-;;; Generated autoloads from flycheck_notmuch-alert.el
+;;; Generated autoloads from flycheck_notmuch-alert-old.el
 
-(autoload 'notmuch-alert-display-info "flycheck_notmuch-alert" "\
-Display information on current BOOKMARK's alert.
+(autoload 'notmuch-alert-display "flycheck_notmuch-alert-old" "\
+Display information about the current buffer's alert." t nil)
 
-\(fn BOOKMARK)" t nil)
+(autoload 'notmuch-alert-visit "flycheck_notmuch-alert-old" "\
+Jump to one of the bookmarks with an alert." t nil)
 
-(autoload 'notmuch-alert-display-status "flycheck_notmuch-alert" "\
-Display status information about current BOOKMARK's alert.
+(autoload 'notmuch-alert-install "flycheck_notmuch-alert-old" "\
+Install an alert for the current buffer.
+The available alerts are defined by `notmuch-alerts'." t nil)
 
-\(fn BOOKMARK)" t nil)
+(autoload 'notmuch-alert-uninstall "flycheck_notmuch-alert-old" "\
+Uninstall an alert for the current buffer." t nil)
+
+(autoload 'notmuch-alert-check "flycheck_notmuch-alert-old" "\
+Check current buffer's alert." t nil)
+
+(autoload 'notmuch-alert-tare "flycheck_notmuch-alert-old" "\
+Set the tare for the current buffer.
+With prefix JUST-DISPLAY set to '(4), do not set the value, just
+display it. With prefix JUSt-DISPLAY set to '(16), remove the
+tare.
+
+\(fn &optional JUST-DISPLAY)" t nil)
 
 (defvar notmuch-alert-mode nil "\
 Non-nil if Notmuch-Alert mode is enabled.
@@ -28,9 +42,9 @@ Setting this variable directly does not take effect;
 either customize it (see the info node `Easy Customization')
 or call the function `notmuch-alert-mode'.")
 
-(custom-autoload 'notmuch-alert-mode "flycheck_notmuch-alert" nil)
+(custom-autoload 'notmuch-alert-mode "flycheck_notmuch-alert-old" nil)
 
-(autoload 'notmuch-alert-mode "flycheck_notmuch-alert" "\
+(autoload 'notmuch-alert-mode "flycheck_notmuch-alert-old" "\
 Allow using notmuch bookmarks as alerts.
 
 This is a minor mode.  If called interactively, toggle the
@@ -49,7 +63,7 @@ it is disabled.
 
 \(fn &optional ARG)" t nil)
 
-(register-definition-prefixes "flycheck_notmuch-alert" '("notmuch-alert-"))
+(register-definition-prefixes "flycheck_notmuch-alert-old" '("notmuch-alert"))
 
 ;;;***
 
