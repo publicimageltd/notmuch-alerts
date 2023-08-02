@@ -308,6 +308,7 @@ any properties which are not used by `notmuch-bookmarks' > v0.2."
         (cl-incf count))
       (message "Reset %d bookmarks" count))))
 
+;;;###autoload
 (defun notmuch-alert-visit ()
   "Update alerts and let the user select one to visit."
   (interactive)
