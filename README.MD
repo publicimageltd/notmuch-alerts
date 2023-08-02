@@ -41,6 +41,9 @@ of mails; else it remains *inactive* or *dormant*.
  
 # Installation
 
+There is currently no "mode" to be activated; the package is just a
+set of interactive functions.
+
 I have the following snippet in my `init.el`:
 
 ```
@@ -55,8 +58,6 @@ I have the following snippet in my `init.el`:
 ;; Second, install the alert package:
 (use-package notmuch-alert
   :after notmuch-bookmarks
-  :config
-  (notmuch-alert-mode)
   :bind*
   (:map global-map
 	("<f3>" . notmuch-alert-visit)))
