@@ -273,6 +273,7 @@ If BOOKMARK-OR-NAME has no valid alert, return nil."
 
 (defun notmuch-alert-update-all ()
   "Update all counts for all alerts."
+  (bookmark-maybe-load-default-file)
   (setq notmuch-alert-counts nil)
   ;; NOTE This could be sped up using `notmuch --batch'
   (thread-last
