@@ -44,6 +44,7 @@
 
 ;;; Code:
 
+(require 'notmuch)
 (require 'notmuch-bookmarks)
 (require 'cl-lib)
 (require 'map)
