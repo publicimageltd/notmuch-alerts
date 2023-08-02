@@ -160,11 +160,10 @@ Throw an error if BOOKMARK-OR-NAME has no query."
       (let ((query (notmuch-alert--build-query bookmark-or-name)))
         (unless query
           (user-error "Alert %s has no query" name))
-        (setq notmuch-alert-counts
-              (map-insert
-               notmuch-alert-counts name
-               (string-to-number
-                (notmuch-command-to-string "count" query))))))))
+        (let ((new-count (string-to-number (notmuch-command-to-string "count" query))))
+          (setq notmuch-alert-counts
+                (map-insert notmuch-alert-counts name new-count))
+          new-count)))))
 
 (defun notmuch-alert-get-mute-count (bookmark-or-name)
   "Return mute count for BOOKMARK-OR-NAME."
