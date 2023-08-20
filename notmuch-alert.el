@@ -176,9 +176,12 @@ Throw an error if BOOKMARK-OR-NAME has no query."
   "Set mute count for BOOKMARK-OR-NAME to the number VAL.
 Called interactively, use the current buffer's bookmark and ask
 for VAL."
-  (interactive (list (or bookmark-current-bookmark (notmuch-alert-select-bookmark))
-                     (read-number "Set mute count for this bookmark: "
-                                  (notmuch-alert-get-count bookmark-current-bookmark))))
+  (interactive (list :called-interactively :called-interactively))
+  (when (equal (list bookmark-or-name val) (list :called-interactively :called-interactively))
+    (setq bookmark-or-name (or bookmark-current-bookmark
+                               (notmuch-alert-select-bookmark)))
+    (setq val  (read-number "Set mute count for this bookmark: "
+                            (notmuch-alert-get-count bookmark-or-name))))
   (setq notmuch-alert-mute-counts
         (map-insert
          notmuch-alert-mute-counts
