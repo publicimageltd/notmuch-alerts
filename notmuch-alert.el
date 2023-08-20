@@ -203,10 +203,10 @@ for VAL."
 Apply the mute count. If the mute count is greater than the
 actual count, return non-nil."
   (let* ((count (notmuch-alert-get-count bookmark-or-name))
-         (mute-count (or (notmuch-alert-get-mute-count bookmark-or-name) 0))
-         (diff   (- count mute-count)))
-    (or (< diff 0)
-        (> (- count mute-count) 0))))
+         (mute-count (notmuch-alert-get-mute-count bookmark-or-name)))
+    (if mute-count
+        (not (= count mute-count))
+      (> count 0))))
 
 (defun notmuch-alert-install (bookmark-or-name &optional filter description interactively-p)
   "Install an alert for  notmuch bookmark BOOKMARK-OR-NAME.
@@ -347,12 +347,15 @@ any properties which are not used by `notmuch-bookmarks' > v0.2."
     ('nil "No bookmark")
     ((pred (not notmuch-bookmarks-record-p)) "Not bookmarked as a notmuch bookmark")
     ((pred (not notmuch-alert-p)) "No alert associated")
-    (_  (format "Alert %s: counting %d mails on query '%s'."
+    (_  (format "Alert %s: counting %d mails on query '%s'.%s"
                 (if (notmuch-alert-active-p bookmark)
                     (propertize "active" 'face 'warning)
                   (propertize "dormant" 'face 'success))
+                (notmuch-alert-get-count bookmark)
                 (notmuch-alert--build-query bookmark)
-                (notmuch-alert-get-count bookmark)))))
+                (if (notmuch-alert-get-mute-count bookmark)
+                    (format " Mute count is set to %d." (notmuch-alert-get-mute-count bookmark))
+                  "")))))
 
 ;;;###autoload
 (defun notmuch-alert-display-info (bookmark)
