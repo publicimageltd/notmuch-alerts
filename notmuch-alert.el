@@ -190,12 +190,15 @@ for VAL."
 
 (defun notmuch-alert-remove-mute-count (bookmark-or-name)
   "Remove mute count for BOOKMARK-OR-NAME."
+  (interactive (list (or bookmark-current-bookmark
+                         (notmuch-alert-select-bookmark))))
   (setq notmuch-alert-mute-counts
         (map-delete notmuch-alert-mute-counts
                     (notmuch-alert-bookmark-name bookmark-or-name))))
 
 (defun notmuch-alert-remove-all-mute-counts ()
   "Remove all mute counts."
+  (interactive)
   (setq notmuch-alert-mute-counts nil))
 
 (defun notmuch-alert-count>0 (bookmark-or-name)
