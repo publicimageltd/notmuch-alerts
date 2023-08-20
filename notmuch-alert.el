@@ -188,18 +188,26 @@ for VAL."
          (notmuch-alert-bookmark-name bookmark-or-name)
          val)))
 
-(defun notmuch-alert-remove-mute-count (bookmark-or-name)
-  "Remove mute count for BOOKMARK-OR-NAME."
+(defun notmuch-alert-remove-mute-count (bookmark-or-name &optional interactive-p)
+  "Remove mute count for BOOKMARK-OR-NAME.
+If called interactively (INTERACTIVE-P), give user feedback."
   (interactive (list (or bookmark-current-bookmark
-                         (notmuch-alert-select-bookmark))))
+                         (notmuch-alert-select-bookmark))
+                     :called-interactively))
   (setq notmuch-alert-mute-counts
         (map-delete notmuch-alert-mute-counts
-                    (notmuch-alert-bookmark-name bookmark-or-name))))
+                    (notmuch-alert-bookmark-name bookmark-or-name)))
+  (when interactive-p
+    (message "Mute count for bookmark '%s' set to 0"
+             (notmuch-alert-bookmark-name bookmark-or-name))))
 
-(defun notmuch-alert-remove-all-mute-counts ()
-  "Remove all mute counts."
-  (interactive)
-  (setq notmuch-alert-mute-counts nil))
+(defun notmuch-alert-remove-all-mute-counts (&optional interactive-p)
+  "Remove all mute counts.
+If called interactively (INTERACTIVE-P), give user feedback."
+  (interactive (list :called-interactively))
+  (setq notmuch-alert-mute-counts nil)
+  (when interactive-p
+    (message "All mute counts set to 0")))
 
 (defun notmuch-alert-count>0 (bookmark-or-name)
   "Check if BOOKMARK-OR-NAME counts more than zero mails.
