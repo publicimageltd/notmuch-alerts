@@ -300,16 +300,26 @@ If BOOKMARK-OR-NAME has no valid alert, return nil."
 
 ;; User interaction
 
+(defun notmuch-alert-remove (bookmark-or-name &optional interactive-p)
+  "Remove the alert for BOOKMARK-OR-NAME.
+If called interactively (INTERACTIVE-P), give user feedback."
+  (interactive (list (or bookmark-current-bookmark (notmuch-alert-select-bookmark))
+                     :called-interactively))
+  (let ((name (notmuch-alert-bookmark-name bookmark-or-name)))
+    (when (bookmark-prop-get name 'alert)
+      (cl-dolist (prop '(alert filter description))
+        (notmuch-alert-remove-prop name prop)))
+    (when interactive-p
+      (message "Removed alert from bookmark '%s'"  name))))
+
 (defun notmuch-alert-remove-all ()
   "Destructively remove all alerts in the bookmark list."
   (interactive)
   (when (y-or-n-p " Remove all alerts from the current bookmark list? ")
     (let ((count 0))
-      (cl-dolist (bookmark (mapcar #'car bookmark-alist))
-        (when (bookmark-prop-get bookmark 'alert)
-          (cl-dolist (prop '(alert filter description))
-            (notmuch-alert-remove-prop bookmark prop))
-          (cl-incf count)))
+      (cl-dolist (bookmark-name (seq-filter #'notmuch-alert-p (mapcar #'car bookmark-alist)))
+        (notmuch-alert-remove bookmark-name)
+        (cl-incf count))
       (message "Removed %d alerts" count))))
 
 (defun notmuch-alert-reset-notmuch-bookmarks ()
