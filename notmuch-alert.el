@@ -302,7 +302,7 @@ If BOOKMARK-OR-NAME has no valid alert, return nil."
       (message "Removed %d alerts" count))))
 
 (defun notmuch-alert-reset-notmuch-bookmarks ()
-  "Aggresively reset all notmuch bookmarks to its bare functionality.
+  "Aggressively reset all notmuch bookmarks to its bare functionality.
 This function deletes all alerts and additionally also removes
 any properties which are not used by `notmuch-bookmarks' > v0.2."
   (interactive)
