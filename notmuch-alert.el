@@ -131,6 +131,16 @@ If there is no description, return nil."
   "Remove the description property of BOOKMARK-OR-NAME."
   (notmuch-alert-remove-prop bookmark-or-name 'description))
 
+(defun notmuch-alert-as-current-bookmark (&optional only-alert-p)
+  "Return the current bookmark iff it is a notmuch bookmark.
+If ONLY-ALERT-P is non-nil, only return bookmark if it is a
+notmuch alert."
+  (when-let ((bmk bookmark-current-bookmark))
+    (when (notmuch-bookmarks-record-p bmk)
+      (if only-alert-p
+          (and (notmuch-alert-p bmk) bmk)
+        bmk))))
+
 ;;; Predicates for counting
 
 (defun notmuch-alert--build-query (bookmark-or-name)
@@ -178,7 +188,7 @@ Called interactively, use the current buffer's bookmark and ask
 for VAL."
   (interactive (list :called-interactively :called-interactively))
   (when (equal (list bookmark-or-name val) (list :called-interactively :called-interactively))
-    (setq bookmark-or-name (or bookmark-current-bookmark
+    (setq bookmark-or-name (or (notmuch-alert-as-current-bookmark t)
                                (notmuch-alert-select-bookmark)))
     (setq val  (read-number "Set mute count for this bookmark: "
                             (notmuch-alert-get-count bookmark-or-name))))
@@ -191,7 +201,7 @@ for VAL."
 (defun notmuch-alert-remove-mute-count (bookmark-or-name &optional interactive-p)
   "Remove mute count for BOOKMARK-OR-NAME.
 If called interactively (INTERACTIVE-P), give user feedback."
-  (interactive (list (or bookmark-current-bookmark
+  (interactive (list (or (notmuch-alert-as-current-bookmark t)
                          (notmuch-alert-select-bookmark))
                      :called-interactively))
   (setq notmuch-alert-mute-counts
@@ -242,7 +252,7 @@ Example usages:
   ;; bookmark name refers to the query \"date:today\"
   ;; alert when there are anread messages for today:
   (notmuch-alert-install \"notmuch: today\" \"is:unread\" \"unread mails\")"
-  (interactive (list (or bookmark-current-bookmark
+  (interactive (list (or (notmuch-alert-as-current-bookmark)
                          (notmuch-alert-select-bookmark))
                      (notmuch-read-query " [Optional] Additional alert filter: ")
                      (read-string " [Optional] Description of what the alert counts: ")
@@ -264,7 +274,7 @@ Example usages:
 
 (defun notmuch-alert-uninstall (bookmark-or-name)
   "Uninstall any alert associated with BOOKMARK-OR-NAME."
-  (interactive (list (or bookmark-current-bookmark
+  (interactive (list (or (notmuch-alert-as-current-bookmark t)
                          (notmuch-alert-select-bookmark))))
   (let ((name (notmuch-alert-bookmark-name bookmark-or-name)))
     (cl-dolist (prop '(alert filter description))
@@ -303,7 +313,8 @@ If BOOKMARK-OR-NAME has no valid alert, return nil."
 (defun notmuch-alert-remove (bookmark-or-name &optional interactive-p)
   "Remove the alert for BOOKMARK-OR-NAME.
 If called interactively (INTERACTIVE-P), give user feedback."
-  (interactive (list (or bookmark-current-bookmark (notmuch-alert-select-bookmark))
+  (interactive (list (or (notmuch-alert-as-current-bookmark t)
+                         (notmuch-alert-select-bookmark))
                      :called-interactively))
   (let ((name (notmuch-alert-bookmark-name bookmark-or-name)))
     (when (bookmark-prop-get name 'alert)
@@ -381,14 +392,14 @@ any properties which are not used by `notmuch-bookmarks' > v0.2."
 ;;;###autoload
 (defun notmuch-alert-display-info (bookmark)
   "Display information on current BOOKMARK's alert."
-  (interactive (list (or bookmark-current-bookmark
+  (interactive (list (or (notmuch-alert-as-current-bookmark t)
                          (notmuch-alert-select-bookmark))))
   (message (notmuch-alert-info-string bookmark)))
 
 ;;;###autoload
 (defun notmuch-alert-display-status (bookmark)
   "Display status information about current BOOKMARK's alert."
-  (interactive (list (or bookmark-current-bookmark
+  (interactive (list (or (notmuch-alert-as-current-bookmark t)
                          (notmuch-alert-select-bookmark))))
   (message (notmuch-alert-status-string bookmark)))
 
