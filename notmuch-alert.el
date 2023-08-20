@@ -199,10 +199,14 @@ for VAL."
   (setq notmuch-alert-mute-counts nil))
 
 (defun notmuch-alert-count>0 (bookmark-or-name)
-  "Check if BOOKMARK-OR-NAME counts more than zero mails."
-  (let ((count (notmuch-alert-get-count bookmark-or-name))
-        (mute-count (or (notmuch-alert-get-mute-count bookmark-or-name) 0)))
-    (> (- count mute-count) 0)))
+  "Check if BOOKMARK-OR-NAME counts more than zero mails.
+Apply the mute count. If the mute count is greater than the
+actual count, return non-nil."
+  (let* ((count (notmuch-alert-get-count bookmark-or-name))
+         (mute-count (or (notmuch-alert-get-mute-count bookmark-or-name) 0))
+         (diff   (- count mute-count)))
+    (or (< diff 0)
+        (> (- count mute-count) 0))))
 
 (defun notmuch-alert-install (bookmark-or-name &optional filter description interactively-p)
   "Install an alert for  notmuch bookmark BOOKMARK-OR-NAME.
