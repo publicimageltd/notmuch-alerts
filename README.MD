@@ -174,7 +174,15 @@ Remove all alerts.
 
 Remove all mute counts from all alerts.
 
-## Changelog
+# Transition to v.2
+
+The new version uses a different format to store the alerts. So if you
+used `notmuch-alerts` before, you will have to remove the old data and
+re-install the alerts by hand. To remove the old data, use `M-x
+notmuch-alert-reset-notmuch-bookmarks`. It strips down all notmuch
+bookmarks to the core functionality.
+
+# Changelog
 
  - v0.2 Complete rewrite
  
