@@ -162,6 +162,10 @@ alert even if the query returns a non-zero result.
 
 Mute counts do not persist across sessions. 
 
+## notmuch-alert-mute-all
+
+Mute all alerts at once.
+
 ## notmuch-alert-remove-mute-count
 
 Remove the mute count for the current bookmark. 
@@ -170,7 +174,7 @@ Remove the mute count for the current bookmark.
 
 Remove all alerts.
 
-## notmuch-alert-mute-counts
+## notmuch-alert-remove-all-mute-counts  or notmuch-alert-unmute-all
 
 Remove all mute counts from all alerts.
 
@@ -184,5 +188,6 @@ bookmarks to the core functionality.
 
 # Changelog
 
+ - Add new command `notmuch-alert-mute-all`
  - v0.2 Complete rewrite
  

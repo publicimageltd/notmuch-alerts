@@ -155,7 +155,6 @@ notmuch alert."
        (when filter
          (concat " AND " filter))))))
 
-;; REVIEW Argument force is never used - is it useful at all?
 (defun notmuch-alert-get-count (bookmark-or-name &optional force)
   "Count the number of mails for the alert in BOOKMARK-OR-NAME.
 Note that this count also includes a filter restriction, if implemented.
@@ -198,6 +197,17 @@ for VAL."
          (notmuch-alert-bookmark-name bookmark-or-name)
          val)))
 
+(defun notmuch-alert-mute-all ()
+  "Mute all alerts using their current count."
+  (interactive)
+  (let ((bmks (seq-filter #'notmuch-alert-p bookmark-alist)))
+    (if (not bmks)
+        (user-error "No alerts to mute")
+      (setq notmuch-alert-mute-counts nil)
+      (cl-dolist (bmk bmks)
+        (notmuch-alert-set-mute-count bmk (notmuch-alert-get-count bmk :force)))
+      (message "Muted %d alerts" (length bmks)))))
+
 (defun notmuch-alert-remove-mute-count (bookmark-or-name &optional interactive-p)
   "Remove mute count for BOOKMARK-OR-NAME.
 If called interactively (INTERACTIVE-P), give user feedback."
@@ -218,6 +228,8 @@ If called interactively (INTERACTIVE-P), give user feedback."
   (setq notmuch-alert-mute-counts nil)
   (when interactive-p
     (message "All mute counts set to 0")))
+
+(defalias 'notmuch-alert-unmute-all 'notmuch-alert-remove-all-mute-counts)
 
 (defun notmuch-alert-count>0 (bookmark-or-name)
   "Check if BOOKMARK-OR-NAME counts more than zero mails.
