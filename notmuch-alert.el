@@ -369,7 +369,8 @@ any properties which are not used by `notmuch-bookmarks' > v0.2."
   (notmuch-alert-update-all)
   (let ((alerts (notmuch-alert-active-alerts)))
     (if (not alerts)
-        (user-error "No alert active")
+        (user-error "No alert active%s"
+                    (if notmuch-alert-mute-counts " (one or more alerts are muted)" ""))
       (let ((alert (completing-read " Visit alerted bookmark: "
                                     alerts nil t)))
         (bookmark-jump alert)))))
